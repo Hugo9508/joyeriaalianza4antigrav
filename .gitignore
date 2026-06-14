@@ -1,0 +1,34 @@
+# Next.js
+.next/
+out/
+build/
+
+# Production
+node_modules/
+.env
+.env.local
+.env.production
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env*.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Avoid nested git issues
+joyeriaalianza3/
+.git/
+
+.vercel
