@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 680" width="680" height="680">
+  <defs>
+    <clipPath id="circleClip">
+      <circle cx="340" cy="340" r="270"/>
+    </clipPath>
+  </defs>
+
+  <rect x="0" y="0" width="680" height="680" fill="#c9a84c" clip-path="url(#circleClip)"/>
+
+  <circle cx="340" cy="340" r="270" fill="none" stroke="#1a2255" stroke-width="3.5"/>
+  <circle cx="340" cy="340" r="261" fill="none" stroke="#1a2255" stroke-width="1.5"/>
+
+  <text x="340" y="430"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="300"
+    font-weight="bold"
+    fill="#1a2255"
+    text-anchor="middle"
+    letter-spacing="-10">JA</text>
+
+  <ellipse cx="291" cy="565" rx="24" ry="11" fill="none" stroke="#1a2255" stroke-width="2"/>
+  <ellipse cx="389" cy="565" rx="24" ry="11" fill="none" stroke="#1a2255" stroke-width="2"/>
+  <polygon points="340,554 350,565 340,576 330,565" fill="#1a2255"/>
+  <line x1="267" y1="565" x2="315" y2="565" stroke="#1a2255" stroke-width="1.8"/>
+  <line x1="365" y1="565" x2="413" y2="565" stroke="#1a2255" stroke-width="1.8"/>
+  <circle cx="267" cy="565" r="3.5" fill="#1a2255"/>
+  <circle cx="413" cy="565" r="3.5" fill="#1a2255"/>
+</svg>

@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 11% 97%; /* #f8f7f6 */
+    --foreground: 41 29% 8%; /* #1a170f */
+    --card: 0 0% 100%;
+    --card-foreground: 41 29% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 41 29% 8%;
+    --primary: 45 68% 52%; /* #d4af37 */
+    --primary-foreground: 41 29% 8%;
+    --secondary: 0 0% 98%; /* #f9f9f9 */
+    --secondary-foreground: 41 29% 8%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 159 14% 49%; /* #6B9080 */
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 45 68% 52%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 41 29% 8%; /* #1a170f */
+    --foreground: 40 11% 97%; /* #f8f7f6 */
+    --card: 41 29% 12%; /* #201d12 */
+    --card-foreground: 40 11% 97%;
+    --popover: 41 29% 8%;
+    --popover-foreground: 40 11% 97%;
+    --primary: 45 68% 52%; /* #d4af37 */
+    --primary-foreground: 41 29% 8%;
+    --secondary: 41 29% 15%; /* #33302a */
+    --secondary-foreground: 40 11% 97%;
+    --muted: 41 29% 15%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 159 14% 49%; /* #6B9080 */
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 41 29% 15%;
+    --input: 41 29% 15%;
+    --ring: 45 68% 52%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  ::selection {
+      @apply bg-primary text-primary-foreground;
+  }
+}

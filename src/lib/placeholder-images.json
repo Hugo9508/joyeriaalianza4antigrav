@@ -1,0 +1,142 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-1",
+      "description": "A woman wearing elegant jewelry, looking away from the camera.",
+      "imageUrl": "https://images.unsplash.com/photo-1633934542430-0905ccb5f050?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxqZXdlbHJ5JTIwbW9kZWx8ZW58MHx8fHwxNzcwMDU2NzQzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "jewelry model"
+    },
+    {
+      "id": "featured-1",
+      "description": "A beautiful diamond solitaire ring.",
+      "imageUrl": "https://images.unsplash.com/photo-1600143674013-a690b5d25104?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxkaWFtb25kJTIwcmluZ3xlbnwwfHx8fDE3NzAwNDY2NTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "diamond ring"
+    },
+    {
+      "id": "featured-2",
+      "description": "An elegant gold heritage pendant necklace.",
+      "imageUrl": "https://images.unsplash.com/photo-1600862754152-80a263dd564f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxnb2xkJTIwbmVja2xhY2V8ZW58MHx8fHwxNzcwMDM0MjY2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gold necklace"
+    },
+    {
+      "id": "featured-3",
+      "description": "A pair of freshwater pearl earrings.",
+      "imageUrl": "https://images.unsplash.com/photo-1701450723521-788008974862?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwZWFybCUyMGVhcnJpbmdzfGVufDB8fHx8MTc3MDA1NjY3OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pearl earrings"
+    },
+    {
+      "id": "service-1",
+      "description": "Interior of a luxury jewelry boutique with a client being attended to.",
+      "imageUrl": "https://images.unsplash.com/photo-1660860547079-fd4845880af9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxqZXdlbHJ5JTIwc3RvcmV8ZW58MHx8fHwxNzcwMDU2NzQzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "jewelry store"
+    },
+    {
+      "id": "atelier-1",
+      "description": "An artisan jeweler crafting a piece of jewelry in a workshop.",
+      "imageUrl": "https://images.unsplash.com/photo-1655111379423-b85edc4da9ac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxhcnRpc2FuJTIwamV3ZWxyeXxlbnwwfHx8fDE3NzAwNTY3NDN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "artisan jewelry"
+    },
+    {
+      "id": "category-rings",
+      "description": "A collection of various rings displayed.",
+      "imageUrl": "https://images.unsplash.com/photo-1640324227718-f997fe8e9478?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cmluZ3MlMjBjb2xsZWN0aW9ufGVufDB8fHx8MTc3MDA1Njc0M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "rings collection"
+    },
+    {
+      "id": "category-necklaces",
+      "description": "Various necklaces on display.",
+      "imageUrl": "https://images.unsplash.com/photo-1761324393336-e45c1fc08404?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxuZWNrbGFjZXMlMjBjb2xsZWN0aW9ufGVufDB8fHx8MTc3MDA1Njc0M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "necklaces collection"
+    },
+    {
+      "id": "category-earrings",
+      "description": "A pair of elegant earrings.",
+      "imageUrl": "https://images.unsplash.com/photo-1768655012957-579afbbf6c9a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxlYXJyaW5ncyUyMGNvbGxlY3Rpb258ZW58MHx8fHwxNzcwMDU2NzQzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "earrings collection"
+    },
+    {
+      "id": "category-gifts",
+      "description": "A beautifully wrapped jewelry gift box.",
+      "imageUrl": "https://images.unsplash.com/photo-1761211115639-54394f139142?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxqZXdlbHJ5JTIwZ2lmdHxlbnwwfHx8fDE3NzAwNTY3NDN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "jewelry gift"
+    },
+    {
+      "id": "product-1-1",
+      "description": "Anillo Solitario Luz",
+      "imageUrl": "https://images.unsplash.com/photo-1732649660434-5cce565a39a6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzb2xpdGFpcmUlMjByaW5nfGVufDB8fHx8MTc3MDA1Njc0M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "solitaire ring"
+    },
+    {
+      "id": "product-2-1",
+      "description": "Collar Áureo",
+      "imageUrl": "https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxnb2xkJTIwbmVja2xhY2V8ZW58MHx8fHwxNzcwMDM0MjY2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gold necklace"
+    },
+    {
+      "id": "product-3-1",
+      "description": "Caravanas Cascada",
+      "imageUrl": "https://images.unsplash.com/photo-1588444650700-fd887f15a9e7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxkaWFtb25kJTIwZWFycmluZ3N8ZW58MHx8fHwxNzcwMDU2NzQzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "diamond earrings"
+    },
+    {
+      "id": "product-4-1",
+      "description": "Brazalete Infinito",
+      "imageUrl": "https://images.unsplash.com/photo-1611107683227-e9060eccd846?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxnb2xkJTIwYnJhY2VsZXR8ZW58MHx8fHwxNzcwMDU2NzQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gold bracelet"
+    },
+    {
+      "id": "product-5-1",
+      "description": "Anillo Zafiro Real",
+      "imageUrl": "https://images.unsplash.com/photo-1735480165158-e645caaf1695?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzYXBwaGlyZSUyMHJpbmd8ZW58MHx8fHwxNzcwMDU2NzQzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sapphire ring"
+    },
+    {
+      "id": "product-6-1",
+      "description": "Collar de Perlas",
+      "imageUrl": "https://images.unsplash.com/photo-1631832722475-dd2ecfc47257?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwZWFybCUyMG5lY2tsYWNlfGVufDB8fHx8MTc3MDAxMTAzMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pearl necklace"
+    },
+    {
+      "id": "product-7-1",
+      "description": "Alianzas Eternal",
+      "imageUrl": "https://images.unsplash.com/photo-1700157175420-9050611c4ac6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx3ZWRkaW5nJTIwYmFuZHN8ZW58MHx8fHwxNzcwMDU2NzQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wedding bands"
+    },
+    {
+      "id": "product-8-1",
+      "description": "Colgante Rosé",
+      "imageUrl": "https://images.unsplash.com/photo-1659682695085-6b66aa8bfef2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxyb3NlJTIwZ29sZCUyMHBlbmRhbnR8ZW58MHx8fHwxNzcwMDU2NzQzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "rose gold pendant"
+    },
+    {
+      "id": "detail-1-main",
+      "description": "Solitario Royal Diamond main view",
+      "imageUrl": "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxkaWFtb25kJTIwcmluZ3xlbnwwfHx8fDE3NzAwNDY2NTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "diamond ring"
+    },
+    {
+      "id": "detail-1-thumb-1",
+      "description": "Solitario Royal Diamond thumbnail 1",
+      "imageUrl": "https://images.unsplash.com/photo-1696774665695-2f237304c3b0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxkaWFtb25kJTIwcmluZyUyMGFuZ2xlfGVufDB8fHx8MTc3MDA1Njc0M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "diamond ring angle"
+    },
+    {
+      "id": "detail-1-thumb-2",
+      "description": "Solitario Royal Diamond thumbnail 2",
+      "imageUrl": "https://images.unsplash.com/photo-1594925699169-702fc784d84d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxkaWFtb25kJTIwcmluZyUyMHNpZGV8ZW58MHx8fHwxNzcwMDU2NzQzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "diamond ring side"
+    },
+    {
+      "id": "detail-1-thumb-3",
+      "description": "Solitario Royal Diamond thumbnail 3",
+      "imageUrl": "https://images.unsplash.com/photo-1565320095063-896b59a67902?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxkaWFtb25kJTIwcmluZyUyMGRldGFpbHxlbnwwfHx8fDE3NzAwNTY3NDN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "diamond ring detail"
+    },
+    {
+      "id": "detail-1-thumb-4",
+      "description": "Solitario Royal Diamond on a model's hand",
+      "imageUrl": "https://images.unsplash.com/photo-1769374086148-849f4e28783d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cmluZyUyMG9uJTIwaGFuZHxlbnwwfHx8fDE3NzAwNTY3NDR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ring on hand"
+    }
+  ]
+}

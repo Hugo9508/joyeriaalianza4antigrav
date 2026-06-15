@@ -1,7 +1,9 @@
 
 import type {NextConfig} from 'next';
+import path from 'path';
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: path.join(__dirname),
   typescript: {
     // Ignoramos errores en build para mayor estabilidad en Hostinger
     ignoreBuildErrors: true,
