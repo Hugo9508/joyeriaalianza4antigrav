@@ -12,10 +12,6 @@ export const WOO_BASE_URL = process.env.WOO_BASE_URL || '';
 const WOO_CK = process.env.WOO_CONSUMER_KEY || '';
 const WOO_CS = process.env.WOO_CONSUMER_SECRET || '';
 
-if (!WOO_BASE_URL || !WOO_CK || !WOO_CS) {
-  throw new Error('Credenciales WooCommerce no definidas en .env.local');
-}
-
 // Cache en memoria
 const memCache = new Map<string, { ts: number; data: any }>();
 const pendingRequests = new Map<string, Promise<any>>();
