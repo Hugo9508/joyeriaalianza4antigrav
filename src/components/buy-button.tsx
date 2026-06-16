@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { CreditCard, Loader2, ShieldCheck, Lock } from 'lucide-react';
@@ -113,148 +112,147 @@ export function BuyButton({ product }: BuyButtonProps) {
       </Button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-headline text-2xl flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-primary" />
-              Checkout
-            </DialogTitle>
-            <DialogDescription>
-              Completá tus datos para proceder al pago seguro con Mercado Pago.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="w-full max-w-md mx-auto p-0 overflow-hidden rounded-2xl">
+          <div className="overflow-y-auto max-h-[90vh] p-5 sm:p-6">
+            <DialogHeader className="mb-4">
+              <DialogTitle className="font-headline text-2xl flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-primary" />
+                Checkout
+              </DialogTitle>
+              <DialogDescription>
+                Completá tus datos para proceder al pago seguro con Mercado Pago.
+              </DialogDescription>
+            </DialogHeader>
 
-          {/* Product Summary */}
-          <div className="flex items-center gap-4 p-3 bg-muted/40 rounded-lg border">
-            {product.images?.[0] && (
-              <div className="w-16 h-16 rounded-md overflow-hidden bg-secondary flex-shrink-0">
-                <img
-                  src={product.images[0]}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
+            {/* Product Summary — mobile-first: imagen grande arriba */}
+            <div className="flex flex-col sm:flex-row items-start gap-3 p-3 bg-muted/40 rounded-xl border mb-5">
+              {product.images?.[0] && (
+                <div className="w-full sm:w-20 sm:h-20 h-40 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold leading-snug">{product.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{product.category}</p>
+                <p className="font-headline text-xl text-primary font-bold mt-1">
+                  USD {product.price.usd.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Nombre y Apellido — apilados en mobile */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="checkout-firstname" className="text-xs uppercase tracking-wider font-medium">
+                    Nombre *
+                  </Label>
+                  <Input
+                    id="checkout-firstname"
+                    placeholder="Tu nombre"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    disabled={state !== 'idle'}
+                    required
+                    autoFocus
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="checkout-lastname" className="text-xs uppercase tracking-wider font-medium">
+                    Apellido
+                  </Label>
+                  <Input
+                    id="checkout-lastname"
+                    placeholder="Tu apellido"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    disabled={state !== 'idle'}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="checkout-email" className="text-xs uppercase tracking-wider font-medium">
+                  Email *
+                </Label>
+                <Input
+                  id="checkout-email"
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={state !== 'idle'}
+                  required
                 />
               </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{product.name}</p>
-              <p className="text-xs text-muted-foreground">{product.category}</p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="font-headline text-lg text-primary font-bold">
-                USD {product.price.usd.toLocaleString()}
-              </p>
-            </div>
+
+              {/* Teléfono y Barrio — apilados en mobile */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="checkout-phone" className="text-xs uppercase tracking-wider font-medium">
+                    Teléfono *
+                  </Label>
+                  <Input
+                    id="checkout-phone"
+                    type="tel"
+                    placeholder="099 123 456"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={state !== 'idle'}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="checkout-barrio" className="text-xs uppercase tracking-wider font-medium">
+                    Barrio
+                  </Label>
+                  <Input
+                    id="checkout-barrio"
+                    placeholder="Ej: Carrasco"
+                    value={barrio}
+                    onChange={(e) => setBarrio(e.target.value)}
+                    disabled={state !== 'idle'}
+                  />
+                </div>
+              </div>
+
+              {errorMsg && (
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <p className="text-sm text-destructive">{errorMsg}</p>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-3 pt-2">
+                <Button
+                  id="checkout-submit-button"
+                  type="submit"
+                  disabled={state !== 'idle'}
+                  className="w-full h-12 bg-[#009ee3] hover:bg-[#007eb5] text-white font-bold shadow-md transition-all duration-200 hover:shadow-lg"
+                >
+                  {(state === 'loading' || state === 'redirecting') && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
+                  {state === 'idle' && (
+                    <Lock className="w-4 h-4 mr-2" />
+                  )}
+                  <span>
+                    {state === 'idle' && 'Pagar con Mercado Pago'}
+                    {state === 'loading' && 'Procesando...'}
+                    {state === 'redirecting' && 'Redirigiendo...'}
+                  </span>
+                </Button>
+
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Pago 100% seguro con Mercado Pago</span>
+                </div>
+              </div>
+            </form>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="checkout-firstname" className="text-xs uppercase tracking-wider font-medium">
-                  Nombre *
-                </Label>
-                <Input
-                  id="checkout-firstname"
-                  placeholder="Tu nombre"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  disabled={state !== 'idle'}
-                  required
-                  autoFocus
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="checkout-lastname" className="text-xs uppercase tracking-wider font-medium">
-                  Apellido
-                </Label>
-                <Input
-                  id="checkout-lastname"
-                  placeholder="Tu apellido"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  disabled={state !== 'idle'}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="checkout-email" className="text-xs uppercase tracking-wider font-medium">
-                Email *
-              </Label>
-              <Input
-                id="checkout-email"
-                type="email"
-                placeholder="tu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={state !== 'idle'}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="checkout-phone" className="text-xs uppercase tracking-wider font-medium">
-                  Teléfono *
-                </Label>
-                <Input
-                  id="checkout-phone"
-                  type="tel"
-                  placeholder="099 123 456"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  disabled={state !== 'idle'}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="checkout-barrio" className="text-xs uppercase tracking-wider font-medium">
-                  Barrio
-                </Label>
-                <Input
-                  id="checkout-barrio"
-                  placeholder="Ej: Carrasco"
-                  value={barrio}
-                  onChange={(e) => setBarrio(e.target.value)}
-                  disabled={state !== 'idle'}
-                />
-              </div>
-            </div>
-
-            {errorMsg && (
-              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-sm text-destructive">{errorMsg}</p>
-              </div>
-            )}
-
-            <DialogFooter className="flex-col gap-3 sm:flex-col">
-              <Button
-                id="checkout-submit-button"
-                type="submit"
-                disabled={state !== 'idle'}
-                className="w-full h-12 bg-[#009ee3] hover:bg-[#007eb5] text-white font-bold shadow-md transition-all duration-200 hover:shadow-lg"
-              >
-                {state === 'loading' && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                )}
-                {state === 'redirecting' && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                )}
-                {state === 'idle' && (
-                  <Lock className="w-4 h-4 mr-2" />
-                )}
-                <span>
-                  {state === 'idle' && 'Pagar con Mercado Pago'}
-                  {state === 'loading' && 'Procesando...'}
-                  {state === 'redirecting' && 'Redirigiendo...'}
-                </span>
-              </Button>
-
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Pago 100% seguro con Mercado Pago</span>
-              </div>
-            </DialogFooter>
-          </form>
         </DialogContent>
       </Dialog>
     </>
