@@ -205,7 +205,7 @@ export function ChatWidget() {
     const data = { name: onboardingForm.name.trim(), phone: onboardingForm.phone };
     localStorage.setItem('alianza_user_info', JSON.stringify(data));
     setUserInfo(data);
-    setSessionId(`web_${data.phone}`);
+    // sessionId is already set via cookie/token logic
     setShowOnboarding(false);
 
     if (pendingText) {
