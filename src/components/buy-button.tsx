@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import type { Product } from '@/lib/products';
-import { createCheckoutPreference } from '@/lib/checkout';
+// Removed checkout import
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
