@@ -7,7 +7,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
 import { WhatsappButton } from '@/components/whatsapp-button';
-// import { ChatWidget } from '@/components/chat-widget'; // Reemplazado por Evolution Widget
+import { ChatWidget } from '@/components/chat-widget';
 import { TickerTape } from '@/components/ticker-tape';
 import Script from 'next/script';
 
