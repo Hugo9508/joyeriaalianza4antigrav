@@ -58,22 +58,30 @@ export function ChatWidget() {
   const { toast } = useToast();
 
   useEffect(() => {
+    const initSession = async () => {
+      const existingSession = sessionStorage.getItem('alma_session_id');
+      if (!existingSession) {
+        try {
+          const res = await fetch('/api/chat-session', { method: 'POST' });
+          const data = await res.json();
+          if (data.token) {
+            sessionStorage.setItem('alma_session_id', data.token);
+            setSessionId(data.token);
+          }
+        } catch (e) {
+          console.error('Error initializing session', e);
+        }
+      } else {
+        setSessionId(existingSession);
+      }
+    };
+
+    initSession();
+
     const saved = localStorage.getItem('alianza_user_info');
     if (saved) {
       const parsedUser = JSON.parse(saved) as UserInfo;
       setUserInfo(parsedUser);
-      // sessionId estable basado en el teléfono del usuario
-      setSessionId(`web_${parsedUser.phone}`);
-    } else {
-      // Visitante anónimo — generar sessionId persistente por sesión
-      const existingSession = sessionStorage.getItem('alma_session_id');
-      if (existingSession) {
-        setSessionId(existingSession);
-      } else {
-        const newSession = `web_anon_${Date.now()}`;
-        sessionStorage.setItem('alma_session_id', newSession);
-        setSessionId(newSession);
-      }
     }
 
     const handleOpenWithMsg = (e: any) => {
