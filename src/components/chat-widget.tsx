@@ -244,42 +244,41 @@ export function ChatWidget() {
     setIsTyping(true);
 
     try {
-      // ✅ Llamada a n8n Alma Agent (Flujo 1)
-      const productoContexto = sessionStorage.getItem('alma_product_context') || '';
-      const res = await fetch('/api/alma-chat', {
+      // ✅ Migración a GPT-4o-mini Directo
+      const history = messages.map(m => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }));
+
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mensaje: text,
-          sessionId: sessionId || `web_${user.phone}`,
-          senderName: user.name,
-          canal: 'web',
-          productoContexto,
+          message: text,
+          history: history.slice(-6) // Últimos 3 turnos de contexto
         }),
-        signal: AbortSignal.timeout(50000),
       });
 
       const result = await res.json();
       setIsTyping(false);
-      addDebugLog(result.success, result.debug, result.error);
 
-      if (result.success) {
-        if (result.response) {
-          addMessage(result.response, 'agent');
-        }
+      if (res.ok && result.reply) {
+        addMessage(result.reply, 'agent');
+        addDebugLog(true, { reply: result.reply });
       } else {
         toast({
           variant: 'destructive',
           title: 'Error de Envío',
-          description: result.error || 'Alma no pudo responder.',
+          description: result.error || 'No se pudo obtener respuesta del asesor.',
         });
+        addDebugLog(false, result, result.error);
       }
     } catch (error: any) {
       setIsTyping(false);
       toast({
         variant: 'destructive',
         title: 'Error de conexión',
-        description: error.name === 'TimeoutError' ? 'Sin respuesta (45s)' : error.message,
+        description: error.message,
       });
     }
 
