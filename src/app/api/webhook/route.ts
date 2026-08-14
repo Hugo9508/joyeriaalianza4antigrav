@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { messageStore } from '@/lib/messageStore';
+import { supabase } from '@/integrations/supabase/client';
 import { createHmac, timingSafeEqual } from 'crypto';
 
 export const runtime = 'nodejs';
@@ -28,20 +28,22 @@ export async function POST(req: NextRequest) {
     }
 
     const body = JSON.parse(rawBody);
-    const { text, senderName, phoneNumber, conversation_id } = body;
+    const { text, sessionId } = body;
 
-    if (!text || !phoneNumber) {
+    if (!text || !sessionId) {
       return NextResponse.json({ 
         error: 'Faltan campos obligatorios' 
       }, { status: 400 });
     }
 
-    messageStore.add({ 
-      text, 
-      senderName: senderName || 'Alma', 
-      phoneNumber, 
-      conversation_id 
+    // Save webhook message to Supabase
+    const { error } = await supabase.from('chat_messages').insert({
+      session_id: sessionId,
+      role: 'assistant',
+      content: text
     });
+
+    if (error) throw error;
 
     return NextResponse.json({ 
       received: true, 

@@ -155,20 +155,20 @@ export function ChatWidget() {
 
         const data = await res.json();
         if (data.messages && data.messages.length > 0) {
-          data.messages.forEach((msg: any) => {
-            setMessages(prev => {
-              if (prev.some(m => m.id === msg.id)) return prev;
-              return [...prev, {
-                id: msg.id,
-                text: msg.text,
-                sender: 'agent',
-                timestamp: new Date(msg.timestamp)
-              }];
-            });
+          setMessages(prev => {
+            const newMessages = data.messages.filter((msg: any) => !prev.some(m => m.id === msg.id));
+            if (newMessages.length === 0) return prev;
+            
+            return [...prev, ...newMessages.map((msg: any) => ({
+              id: msg.id,
+              text: msg.text,
+              sender: msg.role === 'assistant' ? 'agent' : 'user',
+              timestamp: new Date(msg.timestamp)
+            }))];
           });
         }
       } catch (err) { }
-    }, 2500);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [userInfo?.phone, isOpen]);
@@ -288,9 +288,9 @@ export function ChatWidget() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-24 right-6 w-[350px] sm:w-[450px] h-[650px] bg-background border border-primary/20 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[100] animate-in slide-in-from-bottom-5 duration-300">
+    <div className="fixed bottom-24 right-6 w-[350px] sm:w-[450px] h-[650px] bg-background border border-[#d4af37]/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[100] animate-in slide-in-from-bottom-5 duration-300">
       {/* Header */}
-      <div className="bg-primary p-4 flex items-center justify-between text-primary-foreground shadow-md shrink-0">
+      <div className="bg-[#d4af37] p-4 flex items-center justify-between text-white shadow-md shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
             <User className="h-5 w-5" />
