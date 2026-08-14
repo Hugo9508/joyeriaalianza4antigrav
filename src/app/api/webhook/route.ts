@@ -1,32 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { messageStore } from '@/lib/messageStore';
-
-/**
- * @fileOverview Endpoint Maestro de Recepción de Mensajes (n8n -> Web).
- * n8n debe enviar un POST a este endpoint para que el cliente vea la respuesta.
- */
+import { createHmac, timingSafeEqual } from 'crypto';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    
-    // Log de diagnóstico en el servidor
-    console.log(`[INCOMING_WHATSAPP] Phone: ${body.phoneNumber} | Msg: ${body.text}`);
+    const rawBody = await req.text();
+    const signature = req.headers.get('x-signature');
+    const secret = process.env.N8N_WEBHOOK_SECRET;
 
+    if (!secret) {
+      console.error('N8N_WEBHOOK_SECRET no configurado');
+      return NextResponse.json({ error: 'Error de configuración' }, { status: 500 });
+    }
+
+    if (!signature) {
+      return NextResponse.json({ error: 'Falta firma' }, { status: 401 });
+    }
+
+    const expectedSignature = createHmac('sha256', secret)
+      .update(rawBody)
+      .digest('hex');
+
+    if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+      return NextResponse.json({ error: 'Firma inválida' }, { status: 401 });
+    }
+
+    const body = JSON.parse(rawBody);
     const { text, senderName, phoneNumber, conversation_id } = body;
 
     if (!text || !phoneNumber) {
       return NextResponse.json({ 
-        error: 'Faltan campos obligatorios: text y phoneNumber' 
+        error: 'Faltan campos obligatorios' 
       }, { status: 400 });
     }
 
-    // Guardar en el almacén de mensajes para que el chat web lo recoja vía polling
     messageStore.add({ 
       text, 
-      senderName: senderName || 'Maya', 
+      senderName: senderName || 'Alma', 
       phoneNumber, 
       conversation_id 
     });
@@ -37,14 +49,10 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('[WEBHOOK_RECEIVE_ERROR]', error.message);
-    return NextResponse.json({ error: 'Payload malformado' }, { status: 400 });
+    return NextResponse.json({ error: 'Error al procesar el mensaje' }, { status: 400 });
   }
 }
 
 export async function GET() {
-  return NextResponse.json({ 
-    status: "online", 
-    service: "Alianza Chat Webhook",
-    info: "Endpoint listo para recibir mensajes de n8n mediante POST."
-  });
+  return NextResponse.json({ status: "online" });
 }
