@@ -1,6 +1,6 @@
 'use server';
 
-import { appSettings } from '@/lib/settings';
+import { appSettings, legacyServerSettings } from '@/lib/settings';
 
 /**
  * @fileOverview Acción de servidor para enviar mensajes a n8n (flujo sincrónico).
