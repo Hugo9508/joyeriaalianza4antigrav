@@ -1,12 +1,55 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// Simple in-memory rate limiting (for demo/development purposes)
+// In production, use Redis or a similar store.
+const ipRequestCounts = new Map<string, { count: number; lastReset: number }>();
+
+function rateLimit(ip: string, limit: number, windowMs: number) {
+  const now = Date.now();
+  const userData = ipRequestCounts.get(ip) || { count: 0, lastReset: now };
+
+  if (now - userData.lastReset > windowMs) {
+    userData.count = 0;
+    userData.lastReset = now;
+  }
+
+  userData.count++;
+  ipRequestCounts.set(ip, userData);
+
+  return userData.count <= limit;
+}
+
 export function middleware(request: NextRequest) {
-  // Verifica si la variable de entorno está activada en Vercel
+  const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+
+  // Rate Limiting
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    // Chat routes limit: 10 requests per minute
+    if (request.nextUrl.pathname.includes('/api/chat') || request.nextUrl.pathname.includes('/api/messages')) {
+      if (!rateLimit(ip, 10, 60000)) {
+        return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
+          status: 429,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+    
+    // Virtual Try-On limit: 3 requests per 5 minutes
+    if (request.nextUrl.pathname.includes('/api/virtual-tryon')) {
+      if (!rateLimit(ip, 3, 300000)) {
+        return new NextResponse(JSON.stringify({ error: 'Try-on limit reached' }), {
+          status: 429,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+  }
+
+  // Maintenance Mode
   const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
 
   if (isMaintenanceMode) {
-    // Retorna una respuesta limpia o bloquea el sitio con código 503
     return new NextResponse(
       `
       <!DOCTYPE html>
@@ -29,7 +72,11 @@ export function middleware(request: NextRequest) {
       `,
       {
         status: 503,
-        headers: { 'content-type': 'text/html' }
+        headers: { 
+          'content-type': 'text/html',
+          'Retry-After': '3600',
+          'Cache-Control': 'no-store'
+        }
       }
     );
   }

@@ -2,8 +2,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchWooCommerce, getCategoryIdBySlug } from '@/lib/woocommerce';
 import { mapWooCommerceProduct } from '@/lib/mappers';
+import { z } from 'zod';
 
 export const runtime = 'nodejs';
+
+const querySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  per_page: z.coerce.number().int().min(1).max(100).default(20),
+  category: z.string().nullable().optional(),
+  search: z.string().nullable().optional(),
+  featured: z.string().nullable().optional(),
+});
 
 /**
  * Manejador principal para el listado de productos.
@@ -11,11 +20,20 @@ export const runtime = 'nodejs';
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const page = searchParams.get('page') || '1';
-  const per_page = searchParams.get('per_page') || '20';
-  const categorySlug = searchParams.get('category');
-  const search = searchParams.get('search');
-  const featured = searchParams.get('featured');
+  
+  const parseResult = querySchema.safeParse({
+    page: searchParams.get('page'),
+    per_page: searchParams.get('per_page'),
+    category: searchParams.get('category'),
+    search: searchParams.get('search'),
+    featured: searchParams.get('featured'),
+  });
+
+  if (!parseResult.success) {
+    return NextResponse.json({ error: 'Parámetros inválidos', details: parseResult.error.format() }, { status: 400 });
+  }
+
+  const { page, per_page, category: categorySlug, search, featured } = parseResult.data;
 
   try {
     const params: any = { 
@@ -27,7 +45,8 @@ export async function GET(request: NextRequest) {
     };
     
     if (search) params.search = search;
-    if (featured) params.featured = featured;
+    if (featured === 'true') params.featured = true;
+    if (featured === 'false') params.featured = false;
     
     // Resolución de categoría si se provee slug
     if (categorySlug) {
