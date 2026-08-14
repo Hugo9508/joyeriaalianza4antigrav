@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="light">
       <body
-        title="FASE 4 COMPLETADA — SISTEMA ENDURECIDO"
+        title="PROSIGUE CON PROXIMAS FASES S"
         className={cn(
           'min-h-screen bg-background font-body antialiased',
           manrope.variable,
