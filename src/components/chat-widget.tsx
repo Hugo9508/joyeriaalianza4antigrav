@@ -142,7 +142,7 @@ export function ChatWidget() {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/messages?phone=${userInfo.phone}`);
+        const res = await fetch('/api/messages');
         if (!res.ok) return;
 
         const data = await res.json();
