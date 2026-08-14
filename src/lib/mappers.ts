@@ -1,3 +1,4 @@
+import DOMPurify from 'isomorphic-dompurify';
 import { Product, StockStatus } from './products';
 import { WOO_BASE_URL } from './woocommerce';
 
@@ -20,13 +21,23 @@ function normalizeImageUrl(url: string): string {
 function processDescription(html: any): string {
   if (typeof html !== 'string') return '';
 
-  let processed = html.replace(/\[video[^\]]*\]/g, (match) => {
+  const cleanHtml = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'br', 'ul', 'li', 'strong', 'em', 'video', 'source', 'a'],
+    ALLOWED_ATTR: ['src', 'href', 'controls', 'poster', 'preload', 'playsinline', 'class', 'type', 'target', 'rel'],
+  });
+
+  let processed = cleanHtml.replace(/\[video[^\]]*\]/g, (match) => {
     const srcMatch = match.match(/(?:src|mp4)=["']([^"']+)["']/);
     const posterMatch = match.match(/poster=["']([^"']+)["']/);
     
     if (srcMatch) {
-      const src = srcMatch[1];
-      const poster = posterMatch ? `poster="${posterMatch[1]}"` : '';
+      let src = srcMatch[1];
+      if (!src.startsWith('https:')) return '';
+
+      const poster = posterMatch && posterMatch[1].startsWith('https:') 
+        ? `poster="${posterMatch[1]}"` 
+        : '';
+
       return `
         <div class="my-6 aspect-video w-full overflow-hidden rounded-lg bg-black">
           <video controls ${poster} preload="metadata" playsinline class="h-full w-full object-contain">
@@ -40,6 +51,12 @@ function processDescription(html: any): string {
   });
 
   processed = processed.replace(/<video/g, '<video controls preload="metadata" playsinline class="my-6 aspect-video w-full rounded-lg bg-black"');
+  
+  // Validar links y videos restantes
+  processed = processed.replace(/(src|href)=["']([^"']+)["']/g, (match, attr, url) => {
+    if (url.startsWith('https:')) return match;
+    return `${attr}="#"`;
+  });
 
   return processed;
 }
