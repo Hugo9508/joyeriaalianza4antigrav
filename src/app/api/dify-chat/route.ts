@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { serverSettings } from '@/lib/settings';
+import { serverSettings } from '@/lib/settings.server';
 
 /**
  * @fileOverview API Route para chat directo con Dify.
@@ -49,7 +49,7 @@ async function notifyN8nEvent(payload: {
     botResponse?: string;
     userQuery?: string;
 }) {
-    const webhookUrl = serverSettings.n8nEventWebhookUrl;
+    const webhookUrl = serverSettings.N8N_EVENT_WEBHOOK_URL;
     if (!webhookUrl) return; // No configurado, skip silencioso
 
     try {
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        if (!serverSettings.difyApiKey) {
+        if (!serverSettings.DIFY_API_KEY) {
             return NextResponse.json(
                 { success: false, error: 'DIFY_API_KEY no configurada en el servidor.' },
                 { status: 500 }
@@ -104,11 +104,11 @@ export async function POST(req: NextRequest) {
         }
 
         const difyResponse = await fetch(
-            `${serverSettings.difyBaseUrl}/chat-messages`,
+            `${serverSettings.DIFY_BASE_URL}/chat-messages`,
             {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${serverSettings.difyApiKey}`,
+                    'Authorization': `Bearer ${serverSettings.DIFY_API_KEY}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(difyPayload),

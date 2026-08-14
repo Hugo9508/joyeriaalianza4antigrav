@@ -58,22 +58,30 @@ export function ChatWidget() {
   const { toast } = useToast();
 
   useEffect(() => {
+    const initSession = async () => {
+      const existingSession = sessionStorage.getItem('alma_session_id');
+      if (!existingSession) {
+        try {
+          const res = await fetch('/api/chat-session', { method: 'POST' });
+          const data = await res.json();
+          if (data.token) {
+            sessionStorage.setItem('alma_session_id', data.token);
+            setSessionId(data.token);
+          }
+        } catch (e) {
+          console.error('Error initializing session', e);
+        }
+      } else {
+        setSessionId(existingSession);
+      }
+    };
+
+    initSession();
+
     const saved = localStorage.getItem('alianza_user_info');
     if (saved) {
       const parsedUser = JSON.parse(saved) as UserInfo;
       setUserInfo(parsedUser);
-      // sessionId estable basado en el teléfono del usuario
-      setSessionId(`web_${parsedUser.phone}`);
-    } else {
-      // Visitante anónimo — generar sessionId persistente por sesión
-      const existingSession = sessionStorage.getItem('alma_session_id');
-      if (existingSession) {
-        setSessionId(existingSession);
-      } else {
-        const newSession = `web_anon_${Date.now()}`;
-        sessionStorage.setItem('alma_session_id', newSession);
-        setSessionId(newSession);
-      }
     }
 
     const handleOpenWithMsg = (e: any) => {
@@ -142,7 +150,7 @@ export function ChatWidget() {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/messages?phone=${userInfo.phone}`);
+        const res = await fetch('/api/messages');
         if (!res.ok) return;
 
         const data = await res.json();
@@ -197,7 +205,7 @@ export function ChatWidget() {
     const data = { name: onboardingForm.name.trim(), phone: onboardingForm.phone };
     localStorage.setItem('alianza_user_info', JSON.stringify(data));
     setUserInfo(data);
-    setSessionId(`web_${data.phone}`);
+    // sessionId is already set via cookie/token logic
     setShowOnboarding(false);
 
     if (pendingText) {
@@ -213,7 +221,7 @@ export function ChatWidget() {
     const data = { name: onboardingForm.name.trim(), phone: onboardingForm.phone };
     localStorage.setItem('alianza_user_info', JSON.stringify(data));
     setUserInfo(data);
-    setSessionId(`web_${data.phone}`);
+    // sessionId is already set via cookie/token logic
     setNeedsInlineOnboarding(false);
 
     // ✅ Confirmar en el chat que los datos fueron guardados
@@ -236,42 +244,41 @@ export function ChatWidget() {
     setIsTyping(true);
 
     try {
-      // ✅ Llamada a n8n Alma Agent (Flujo 1)
-      const productoContexto = sessionStorage.getItem('alma_product_context') || '';
-      const res = await fetch('/api/alma-chat', {
+      // ✅ Migración a GPT-4o-mini Directo
+      const history = messages.map(m => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }));
+
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mensaje: text,
-          sessionId: sessionId || `web_${user.phone}`,
-          senderName: user.name,
-          canal: 'web',
-          productoContexto,
+          message: text,
+          history: history.slice(-6) // Últimos 3 turnos de contexto
         }),
-        signal: AbortSignal.timeout(50000),
       });
 
       const result = await res.json();
       setIsTyping(false);
-      addDebugLog(result.success, result.debug, result.error);
 
-      if (result.success) {
-        if (result.response) {
-          addMessage(result.response, 'agent');
-        }
+      if (res.ok && result.reply) {
+        addMessage(result.reply, 'agent');
+        addDebugLog(true, { reply: result.reply });
       } else {
         toast({
           variant: 'destructive',
           title: 'Error de Envío',
-          description: result.error || 'Alma no pudo responder.',
+          description: result.error || 'No se pudo obtener respuesta del asesor.',
         });
+        addDebugLog(false, result, result.error);
       }
     } catch (error: any) {
       setIsTyping(false);
       toast({
         variant: 'destructive',
         title: 'Error de conexión',
-        description: error.name === 'TimeoutError' ? 'Sin respuesta (45s)' : error.message,
+        description: error.message,
       });
     }
 

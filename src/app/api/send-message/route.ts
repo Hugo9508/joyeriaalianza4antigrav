@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { appSettings } from '@/lib/settings';
+import { appSettings, legacyServerSettings } from '@/lib/settings';
 
 /**
  * @fileOverview API Route para enviar mensajes a n8n.
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
             },
         };
 
-        const n8nResponse = await fetch(appSettings.n8nWebhookUrl, {
+        const n8nResponse = await fetch(legacyServerSettings.n8nWebhookUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

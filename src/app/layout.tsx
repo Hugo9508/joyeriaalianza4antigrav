@@ -7,7 +7,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
 import { WhatsappButton } from '@/components/whatsapp-button';
-// import { ChatWidget } from '@/components/chat-widget'; // Reemplazado por Evolution Widget
+import { ChatWidget } from '@/components/chat-widget';
 import { TickerTape } from '@/components/ticker-tape';
 import Script from 'next/script';
 
@@ -47,38 +47,7 @@ export default function RootLayout({
           <Footer />
         </div>
         <div id="modal-root"></div>
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css"
-        />
-        <Script
-          id="n8n-chat-widget"
-          type="module"
-          strategy="lazyOnload"
-          dangerouslySetInnerHTML={{
-            __html: `
-              import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
-              createChat({
-                webhookUrl: 'https://n8n.axion380.com.br/webhook/alma-agent-2',
-                mode: 'window',
-                showWelcomeScreen: true,
-                initialMessages: [
-                  '\u00a1Hola! Soy Alma \ud83d\udc8e',
-                  '\u00bfEn qu\u00e9 puedo ayudarte hoy?'
-                ],
-                i18n: {
-                  en: {
-                    title: 'Alma \u2014 Joyer\u00eda Alianzas',
-                    subtitle: 'Tu asesora virtual de joyer\u00eda',
-                    inputPlaceholder: 'Escribe tu mensaje...',
-                    getStarted: 'Comenzar conversaci\u00f3n',
-                    error: 'Hubo un error. Intenta de nuevo.',
-                  }
-                }
-              });
-            `
-          }}
-        />
+        <ChatWidget />
         <WhatsappButton />
         <Toaster />
       </body>

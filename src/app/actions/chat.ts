@@ -1,6 +1,6 @@
 'use server';
 
-import { appSettings } from '@/lib/settings';
+import { appSettings, legacyServerSettings } from '@/lib/settings';
 
 /**
  * @fileOverview Acción de servidor para enviar mensajes a n8n (flujo sincrónico).
@@ -35,7 +35,7 @@ export async function sendMessageAction(payload: {
   };
 
   try {
-    const response = await fetch(appSettings.n8nWebhookUrl, {
+    const response = await fetch(legacyServerSettings.n8nWebhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export async function sendMessageAction(payload: {
     }
 
     const debugInfo = {
-      url: appSettings.n8nWebhookUrl,
+      url: legacyServerSettings.n8nWebhookUrl,
       status: response.status,
       statusText: response.statusText,
       duration: `${duration}ms`,
@@ -92,7 +92,7 @@ export async function sendMessageAction(payload: {
     const duration = Math.round(endTime - startTime);
 
     const debugInfo = {
-      url: appSettings.n8nWebhookUrl,
+      url: legacyServerSettings.n8nWebhookUrl,
       error: error.message,
       duration: `${duration}ms`,
       payload: requestBody

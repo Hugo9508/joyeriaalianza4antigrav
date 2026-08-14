@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import type { Product } from '@/lib/products';
-import { createCheckoutPreference } from '@/lib/checkout';
+// Removed checkout import
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,13 +55,27 @@ export function BuyButton({ product }: BuyButtonProps) {
     setState('loading');
 
     try {
-      const result = await createCheckoutPreference(product, {
-        firstName: firstName.trim(),
-        lastName: lastName.trim() || undefined,
-        email: email.trim(),
-        phone: phone.trim(),
-        barrio: barrio.trim() || undefined,
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          buyer: {
+            firstName: firstName.trim(),
+            lastName: lastName.trim() || undefined,
+            email: email.trim(),
+            phone: phone.trim(),
+            barrio: barrio.trim() || undefined,
+          },
+        }),
       });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Error al procesar el pago');
+      }
+
+      const result = await response.json();
 
       setState('redirecting');
 
