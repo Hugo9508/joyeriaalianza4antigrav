@@ -49,7 +49,7 @@ async function notifyN8nEvent(payload: {
     botResponse?: string;
     userQuery?: string;
 }) {
-    const webhookUrl = serverSettings.n8nEventWebhookUrl;
+    const webhookUrl = serverSettings.N8N_EVENT_WEBHOOK_URL;
     if (!webhookUrl) return; // No configurado, skip silencioso
 
     try {
