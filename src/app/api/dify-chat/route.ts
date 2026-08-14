@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { serverSettings } from '@/lib/settings';
+import { serverSettings } from '@/lib/settings.server';
 
 /**
  * @fileOverview API Route para chat directo con Dify.
