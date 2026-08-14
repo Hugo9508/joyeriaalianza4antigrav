@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { serverSettings } from '@/lib/settings.server';
+import { cookies } from 'next/headers';
 
 export const runtime = 'nodejs';
 
@@ -10,6 +11,12 @@ export async function POST(req: NextRequest) {
     if (!serverSettings.OPENAI_API_KEY) {
       console.error('OPENAI_API_KEY no configurado');
       return NextResponse.json({ error: 'Configuración de IA faltante' }, { status: 500 });
+    }
+
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('chat_session')?.value;
+    if (!sessionToken) {
+       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const systemPrompt = `Eres el Agente de Atención al Cliente de "Joyería Alianzas".
