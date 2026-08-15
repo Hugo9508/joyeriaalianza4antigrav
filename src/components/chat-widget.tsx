@@ -37,12 +37,11 @@ export function ChatWidget() {
   const [needsInlineOnboarding, setNeedsInlineOnboarding] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [onboardingForm, setOnboardingForm] = useState({ name: '', phone: '' });
-  // sessionId estable por visitante (basado en phone o uuid aleatorio)
   const [sessionId, setSessionId] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
-      text: `¡Hola! Soy ${appSettings.chatAgentName}. ¿En qué puedo ayudarte hoy? ✨`,
+      text: `Bienvenida a Joyería Alianzas. Soy Alma, su asistente personal. ¿En qué pieza de alta joyería puedo asistirle hoy? ✨`,
       sender: 'agent',
       timestamp: new Date(),
     },
@@ -128,7 +127,7 @@ export function ChatWidget() {
       // Resetear mensajes al bienvenida para empezar limpio
       setMessages([{
         id: 'welcome',
-        text: `¡Hola! Soy ${appSettings.chatAgentName}. ¿En qué puedo ayudarte hoy? ✨`,
+        text: `Bienvenida a Joyería Alianzas. Soy Alma, su asistente personal. ¿En qué pieza de alta joyería puedo asistirle hoy? ✨`,
         sender: 'agent',
         timestamp: new Date(),
       }]);
@@ -390,18 +389,48 @@ export function ChatWidget() {
                   <div
                     key={msg.id}
                     className={cn(
-                      "max-w-[85%] p-3 rounded-2xl text-sm shadow-sm overflow-hidden",
+                      "max-w-[85%] p-3 rounded-2xl text-sm shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-1 duration-300",
                       msg.sender === 'user'
-                        ? "ml-auto bg-primary text-primary-foreground rounded-tr-none"
-                        : "mr-auto bg-card text-card-foreground border border-primary/5 rounded-tl-none"
+                        ? "ml-auto bg-[#d4af37] text-white rounded-tr-none"
+                        : "mr-auto bg-white text-slate-800 border border-[#d4af37]/10 rounded-tl-none"
                     )}
                   >
                     <p className="whitespace-pre-line leading-relaxed" style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>{msg.text}</p>
-                    <span className="text-[8px] opacity-40 mt-1 block text-right">
+                    <span className={cn(
+                      "text-[8px] mt-1 block text-right",
+                      msg.sender === 'user' ? "text-white/70" : "text-slate-400"
+                    )}>
                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                 ))}
+
+                {isTyping && (
+                  <div className="mr-auto bg-white text-slate-800 border border-[#d4af37]/10 p-3 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-[#d4af37]/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 bg-[#d4af37]/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 bg-[#d4af37]/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                )}
+
+                {!isTyping && messages.length < 3 && !needsInlineOnboarding && (
+                  <div className="flex flex-wrap gap-2 mt-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    {[
+                      "¿Cómo comprar?",
+                      "Anillos de compromiso",
+                      "Alianzas de oro 18k",
+                      "Ubicación de la boutique"
+                    ].map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        onClick={() => processMessage(suggestion)}
+                        className="text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-full border border-[#d4af37]/30 text-[#d4af37] hover:bg-[#d4af37] hover:text-white transition-colors duration-300 bg-white/50 backdrop-blur-sm"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {/* ✅ Formulario inline para nombre y WhatsApp dentro del chat */}
                 {needsInlineOnboarding && (
                   <div className="mr-auto w-[90%] bg-card border border-primary/10 rounded-2xl rounded-tl-none p-4 shadow-sm animate-in slide-in-from-bottom-2 duration-300">
