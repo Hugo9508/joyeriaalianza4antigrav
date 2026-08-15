@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { supabase } from '@/integrations/supabase/client';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   const cookieStore = await cookies();
