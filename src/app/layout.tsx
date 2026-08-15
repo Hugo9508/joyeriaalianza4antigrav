@@ -1,7 +1,7 @@
 
 import type { Metadata } from 'next';
 import { Manrope, Playfair_Display } from 'next/font/google';
-import './globals.css';
+import '@/app/globals.css';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="light">
       <body
-        title="PROSIGUE CON PROXIMAS FASES S"
+        title="SIN ROMPER LA LOGICA DEL APP WEB APLICA EL ESTAPA 4"
         className={cn(
           'min-h-screen bg-background font-body antialiased',
           manrope.variable,
