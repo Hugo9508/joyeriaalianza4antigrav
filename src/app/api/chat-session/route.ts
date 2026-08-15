@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { supabase } from '@/integrations/supabase/client';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   try {
     const { data: session, error } = await supabase

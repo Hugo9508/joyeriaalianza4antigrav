@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { createHmac, timingSafeEqual } from 'crypto';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
