@@ -1,14 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { serverSettings } from '@/lib/settings.server';
 import { cookies } from 'next/headers';
-import { supabase } from '@/integrations/supabase/client';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const chatRequestSchema = z.object({
+  message: z.string().trim().min(1, 'Mensaje vacío').max(2000, 'Mensaje demasiado largo'),
+  history: z.array(z.object({ role: z.string(), content: z.string() })).optional(),
+});
+
 export async function POST(req: NextRequest) {
   try {
-    const { message } = await req.json();
+    const body = await req.json().catch(() => null);
+    const parsed = chatRequestSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Solicitud inválida' },
+        { status: 400 }
+      );
+    }
+
+    const { message } = parsed.data;
 
     if (!serverSettings.OPENAI_API_KEY) {
       console.error('OPENAI_API_KEY no configurado');
@@ -18,11 +34,13 @@ export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get('chat_session')?.value;
     if (!sessionToken) {
-       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    const supabaseAdmin = getSupabaseAdmin();
+
     // Fetch history from Supabase
-    const { data: historyData, error: historyError } = await supabase
+    const { data: historyData, error: historyError } = await supabaseAdmin
       .from('chat_messages')
       .select('role, content')
       .eq('session_id', sessionToken)
@@ -32,10 +50,10 @@ export async function POST(req: NextRequest) {
     if (historyError) throw historyError;
 
     // Save user message
-    await supabase.from('chat_messages').insert({
+    await supabaseAdmin.from('chat_messages').insert({
       session_id: sessionToken,
       role: 'user',
-      content: message
+      content: message,
     });
 
     const systemPrompt = `Eres "Alma", la conserje digital de Joyería Alianzas, una boutique de alta joyería en Uruguay.
@@ -54,14 +72,14 @@ Directrices clave:
     const chatMessages = [
       { role: 'system', content: systemPrompt },
       ...(historyData || []).map(m => ({ role: m.role, content: m.content })),
-      { role: 'user', content: message }
+      { role: 'user', content: message },
     ];
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${serverSettings.OPENAI_API_KEY}`
+        Authorization: `Bearer ${serverSettings.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
@@ -79,15 +97,15 @@ Directrices clave:
     const reply = data.choices[0].message.content;
 
     // Save assistant message
-    await supabase.from('chat_messages').insert({
+    await supabaseAdmin.from('chat_messages').insert({
       session_id: sessionToken,
       role: 'assistant',
-      content: reply
+      content: reply,
     });
 
     return NextResponse.json({ reply });
   } catch (error: any) {
     console.error('[CHAT_ERROR]', error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'No se pudo procesar el mensaje' }, { status: 500 });
   }
 }

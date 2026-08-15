@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { supabase } from '@/integrations/supabase/client';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST() {
   try {
-    const { data: session, error } = await supabase
+    const cookieStore = await cookies();
+    const existing = cookieStore.get('chat_session')?.value;
+
+    // Ya hay una sesión activa en la cookie httpOnly: no crear otra fila.
+    if (existing) {
+      return NextResponse.json({ success: true });
+    }
+
+    const { data: session, error } = await getSupabaseAdmin()
       .from('chat_sessions')
       .insert({})
       .select('id')
@@ -14,20 +22,19 @@ export async function POST() {
 
     if (error) throw error;
 
-    const sessionToken = session.id;
-    const cookieStore = await cookies();
-    
-    cookieStore.set('chat_session', sessionToken, {
+    cookieStore.set('chat_session', session.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7 // 1 week
+      maxAge: 60 * 60 * 24 * 7, // 1 semana
     });
 
-    return NextResponse.json({ success: true, token: sessionToken });
+    // El token NUNCA va en el body: solo vive en la cookie httpOnly,
+    // así JS del navegador (y un eventual XSS) no puede leerlo.
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[SESSION_ERROR]', error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'No se pudo iniciar la sesión de chat' }, { status: 500 });
   }
 }

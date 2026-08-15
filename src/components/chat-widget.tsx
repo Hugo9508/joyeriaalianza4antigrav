@@ -58,20 +58,13 @@ export function ChatWidget() {
 
   useEffect(() => {
     const initSession = async () => {
-      const existingSession = sessionStorage.getItem('alma_session_id');
-      if (!existingSession) {
-        try {
-          const res = await fetch('/api/chat-session', { method: 'POST' });
-          const data = await res.json();
-          if (data.token) {
-            sessionStorage.setItem('alma_session_id', data.token);
-            setSessionId(data.token);
-          }
-        } catch (e) {
-          console.error('Error initializing session', e);
-        }
-      } else {
-        setSessionId(existingSession);
+      // El token de sesión vive únicamente en una cookie httpOnly (la setea el
+      // servidor) — nunca en sessionStorage, para que no quede accesible a JS.
+      // La ruta es idempotente: si ya hay cookie, no crea una sesión nueva.
+      try {
+        await fetch('/api/chat-session', { method: 'POST' });
+      } catch (e) {
+        console.error('Error initializing session', e);
       }
     };
 

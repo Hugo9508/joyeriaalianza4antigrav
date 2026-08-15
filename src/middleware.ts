@@ -1,12 +1,62 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// Rate limit básico en memoria (primera capa — no sobrevive reinicios ni
+// múltiples instancias, pero corta abuso trivial de scripts/curl mientras
+// el sitio corre en un único proceso Node).
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMITS: Record<string, number> = {
+  '/api/chat': 20,
+  '/api/chat-session': 10,
+  '/api/checkout': 8,
+  '/api/webhook': 60,
+  '/api/virtual-tryon': 5,
+};
+
+const hits = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(key: string, max: number): boolean {
+  const now = Date.now();
+  const entry = hits.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    hits.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+
+  if (entry.count >= max) return false;
+
+  entry.count++;
+  return true;
+}
+
+// Poda ocasional del Map para que no crezca indefinidamente.
+function pruneExpired() {
+  const now = Date.now();
+  for (const [key, entry] of hits) {
+    if (now > entry.resetAt) hits.delete(key);
+  }
+}
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  );
+}
+
+function withSecurityHeaders(response: NextResponse): NextResponse {
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  return response;
+}
+
 export function middleware(request: NextRequest) {
-  // Verifica si la variable de entorno está activada en Vercel
   const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
 
   if (isMaintenanceMode) {
-    // Retorna una respuesta limpia o bloquea el sitio con código 503
     return new NextResponse(
       `
       <!DOCTYPE html>
@@ -20,7 +70,7 @@ export function middleware(request: NextRequest) {
           <div style="padding: 2rem;">
             <h1 style="margin-bottom: 20px; font-size: 2.5rem;">Sitio en Mantenimiento</h1>
             <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto; line-height: 1.6; color: #ffffff;">
-              Estamos trabajando para mejorar tu experiencia en Joyería Alianzas. <br/> 
+              Estamos trabajando para mejorar tu experiencia en Joyería Alianzas. <br/>
               Volveremos a estar en línea muy pronto.
             </p>
           </div>
@@ -29,12 +79,35 @@ export function middleware(request: NextRequest) {
       `,
       {
         status: 503,
-        headers: { 'content-type': 'text/html' }
+        headers: {
+          'content-type': 'text/html',
+          'Retry-After': '600',
+          'Cache-Control': 'no-store',
+        },
       }
     );
   }
 
-  return NextResponse.next();
+  const { pathname } = request.nextUrl;
+  const limit = RATE_LIMITS[pathname];
+
+  if (limit) {
+    if (Math.random() < 0.02) pruneExpired();
+
+    const ip = getClientIp(request);
+    const key = `${ip}:${pathname}`;
+
+    if (!checkRateLimit(key, limit)) {
+      return withSecurityHeaders(
+        new NextResponse(JSON.stringify({ error: 'Demasiadas solicitudes, intentá de nuevo en un minuto.' }), {
+          status: 429,
+          headers: { 'content-type': 'application/json', 'Retry-After': '60' },
+        })
+      );
+    }
+  }
+
+  return withSecurityHeaders(NextResponse.next());
 }
 
 // Configuración para que el middleware excluya recursos estáticos y de sistema
