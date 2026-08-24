@@ -61,12 +61,13 @@ function getClientIp(request: NextRequest): string {
 // NO entran acá — el navegador nunca les pega directo, siempre pasa por
 // nuestras propias rutas /api/*.
 //
-// ⚠️ No se pudo probar en vivo contra un navegador real: el sandbox donde
-// se escribió esto no tiene salida de red hacia tradingview.com ni
-// google.com, así que el comodín de TradingView (frame-src/connect-src) es
-// la mejor conjetura, no algo verificado cargando el widget. Si algo se
-// rompe con la consola marcando "Refused to ... because it violates the
-// following Content Security Policy directive", es acá.
+// Update: se confirmó en producción que el widget de TradingView (el
+// ticker-tape) no sirve su iframe desde *.tradingview.com sino desde
+// www.tradingview-widget.com (dominio propio, no subdominio) — la consola
+// tiraba "Framing 'https://www.tradingview-widget.com/' violates ... 
+// frame-src". Se agregó ese origen a frame-src y connect-src. Si aparece
+// otro error de CSP en consola marcando "Refused to ... because it
+// violates the following Content Security Policy directive", es acá.
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -74,8 +75,8 @@ const CSP = [
   "img-src 'self' data: https://placehold.co https://i.imgur.com https://images.unsplash.com https://picsum.photos https://joyeriabd.a380.com.br",
   "media-src 'self' https://goods-vod.kwcdn.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.tradingview.com",
-  "frame-src https://www.google.com https://*.tradingview.com",
+  "connect-src 'self' https://*.tradingview.com https://*.tradingview-widget.com",
+  "frame-src https://www.google.com https://*.tradingview.com https://*.tradingview-widget.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
