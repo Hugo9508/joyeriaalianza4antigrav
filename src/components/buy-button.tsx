@@ -2,7 +2,6 @@
 
 import { useState, type FormEvent } from 'react';
 import type { Product } from '@/lib/products';
-// Removed checkout import
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -77,11 +76,6 @@ export function BuyButton({ product }: BuyButtonProps) {
 
       const result = await response.json();
 
-      // Antes esto asumía que result.redirect_url siempre venía bien formado
-      // y redirigía sin validar. Si n8n cambiaba el shape de la respuesta o
-      // Mercado Pago fallaba devolviendo 200 con otro formato, el usuario
-      // veía "¡Redirigiendo!" y terminaba en /undefined → 404, venta perdida
-      // sin ningún log.
       if (!result?.redirect_url || typeof result.redirect_url !== 'string') {
         throw new Error('El proveedor de pago no devolvió un link válido. Intentá de nuevo o escribinos por WhatsApp.');
       }
@@ -93,7 +87,6 @@ export function BuyButton({ product }: BuyButtonProps) {
         description: 'Serás redirigido en un momento...',
       });
 
-      // Small delay so user sees the feedback
       setTimeout(() => {
         window.location.href = result.redirect_url;
       }, 600);
@@ -122,19 +115,17 @@ export function BuyButton({ product }: BuyButtonProps) {
 
   return (
     <>
-      {/* Antes: gradiente dorado con glow de color (from-primary via-yellow-500
-          to-primary + shadow-primary/25) — el tell de template más fuerte del
-          sitio. Ahora usa la variante default del botón (tinta sólida). */}
-      <Button
+      <button
         id="buy-now-button"
-        size="lg"
+        type="button"
         onClick={() => setOpen(true)}
         disabled={isDisabled}
-        className="w-full group"
+        className="w-full h-14 bg-foreground hover:bg-foreground/90 text-background font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 rounded-md transition-all shadow-md active:translate-y-px disabled:opacity-40 disabled:pointer-events-none"
+        style={{ color: '#FAF8F4', backgroundColor: '#14120D' }}
       >
-        <CreditCard className="w-5 h-5 mr-2 transition-transform group-hover:scale-110" />
-        {isDisabled ? 'Agotado' : 'Comprar Ahora'}
-      </Button>
+        <CreditCard className="w-5 h-5 transition-transform group-hover:scale-110 text-white" style={{ color: '#FAF8F4' }} />
+        <span>{isDisabled ? 'Agotado' : 'Comprar Ahora'}</span>
+      </button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="w-full max-w-md mx-auto p-0 overflow-hidden rounded-2xl">
@@ -252,8 +243,6 @@ export function BuyButton({ product }: BuyButtonProps) {
               )}
 
               <div className="flex flex-col gap-3 pt-2">
-                {/* variant="payment": única excepción cromática permitida en el
-                    sistema (es el color de marca de Mercado Pago, no del sitio). */}
                 <Button
                   id="checkout-submit-button"
                   type="submit"
