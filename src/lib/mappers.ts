@@ -1,4 +1,3 @@
-import DOMPurify from 'isomorphic-dompurify';
 import { Product, StockStatus } from './products';
 import { WOO_BASE_URL } from './woocommerce';
 
@@ -16,15 +15,27 @@ function normalizeImageUrl(url: string): string {
 }
 
 /**
+ * Sanitizador ligero y nativo de HTML compatible con Serverless Node.js (sin jsdom / html-encoding-sniffer).
+ */
+function sanitizeHtmlString(html: string): string {
+  if (!html || typeof html !== 'string') return '';
+  // Remover tags peligrosos como script, iframe, object, embed, style
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '')
+    .replace(/on\w+='[^']*'/gi, '');
+}
+
+/**
  * Procesa la descripción de WooCommerce para convertir shortcodes de video en HTML nativo.
  */
 function processDescription(html: any): string {
   if (typeof html !== 'string') return '';
 
-  const cleanHtml = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p', 'br', 'ul', 'li', 'strong', 'em', 'video', 'source', 'a'],
-    ALLOWED_ATTR: ['src', 'href', 'controls', 'poster', 'preload', 'playsinline', 'class', 'type', 'target', 'rel'],
-  });
+  const cleanHtml = sanitizeHtmlString(html);
 
   let processed = cleanHtml.replace(/\[video[^\]]*\]/g, (match) => {
     const srcMatch = match.match(/(?:src|mp4)=["']([^"']+)["']/);
