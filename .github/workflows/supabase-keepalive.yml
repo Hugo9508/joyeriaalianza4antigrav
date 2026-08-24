@@ -1,0 +1,39 @@
+name: Supabase keep-alive
+
+# Los proyectos de Supabase en plan free se pausan automaticamente despues
+# de 7 dias sin actividad de API. Este workflow le pega un ping liviano al
+# endpoint REST del proyecto cada 12 horas para que nunca llegue a esos 7
+# dias de inactividad y se mantenga vivo sin costo.
+#
+# Se pega contra la raiz de PostgREST (/rest/v1/) en vez de una tabla
+# puntual: no depende de que exista ninguna tabla especifica ni de permisos
+# de RLS (que en este proyecto ya bloquean el acceso anon a chat_sessions/
+# chat_messages) - alcanza con que el proyecto responda para contar como
+# actividad.
+#
+# La URL y la key son las mismas NEXT_PUBLIC_* que ya viajan en el bundle
+# del navegador (publicas por diseno, no son secretas) - no hace falta
+# configurar ningun secret en GitHub para que esto funcione.
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'  # 00:00 y 12:00 UTC
+  workflow_dispatch: {}      # permite disparo manual desde la pestana Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping al proyecto de Supabase
+        env:
+          SUPABASE_URL: https://jqzdtbxsehjyyyxukyaj.supabase.co
+          SUPABASE_ANON_KEY: sb_publishable_frgpsglHH_F5EC0GziJyVw_FBTvmOR2
+        run: |
+          http_code=$(curl -sS -o /dev/null -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/" \
+            -H "apikey: $SUPABASE_ANON_KEY")
+          echo "Respuesta del proyecto: HTTP $http_code"
+          if [ "$http_code" -ge 500 ]; then
+            echo "::error::Supabase respondio $http_code - revisar si el proyecto esta pausado o hay un problema real."
+            exit 1
+          fi
