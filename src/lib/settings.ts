@@ -7,11 +7,13 @@
  * 'server-only' para que el build falle si algo del cliente lo importa.
  */
 export const appSettings = {
-  // NOTA: existían dos números distintos en el código (59895435644 acá y
-  // 59891264956 en lib/whatsapp.ts, page.tsx y el chat widget). Se unificó a
-  // este, el que ya vivía en el archivo de configuración pública — confirmar
-  // con el dueño del negocio que es el correcto antes de dar esto por cerrado.
-  whatsAppNumber: "59895435644",
+  // Confirmado con el dueño del negocio (2026-08-24): el WhatsApp real de
+  // la boutique es este. Antes había dos números distintos hardcodeados en
+  // el código (59895435644 y este mismo, 59891264956) y una unificación
+  // previa se había quedado con el equivocado — ya corregido acá, único
+  // lugar del que lo toman los 4 puntos que disparan WhatsApp (footer x3,
+  // ficha de producto, checkout fallido).
+  whatsAppNumber: "59891264956",
   chatAgentName: "Alma",
   siteUrl: "https://joyeria.a380.com.br",
   // Dirección real de la boutique (Mercedes 1211) — antes el system prompt de
