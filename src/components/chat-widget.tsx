@@ -5,10 +5,11 @@ import { appSettings } from '@/lib/settings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Send, User, Loader2, Phone, Terminal, CheckCircle } from 'lucide-react';
+import { X, Send, User, Loader2, Phone, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { WhatsappIcon } from '@/components/icons';
 
 type Message = {
   id: string;
@@ -22,13 +23,6 @@ type UserInfo = {
   phone: string;
 };
 
-type DebugLog = {
-  timestamp: string;
-  success: boolean;
-  error?: string;
-  data: any;
-};
-
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -37,7 +31,10 @@ export function ChatWidget() {
   const [needsInlineOnboarding, setNeedsInlineOnboarding] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [onboardingForm, setOnboardingForm] = useState({ name: '', phone: '' });
-  const [sessionId, setSessionId] = useState<string>('');
+  // Marca cuándo se (re)abrió/reseteó la charla en la UI, para que el polling
+  // no pegue debajo del mensaje de bienvenida una conversación de hace una
+  // semana (la cookie de sesión dura 7 días).
+  const [chatOpenedAt, setChatOpenedAt] = useState<number>(() => Date.now());
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -48,12 +45,15 @@ export function ChatWidget() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [pendingText, setPendingText] = useState<string | null>(null);
-  const [showDebug, setShowDebug] = useState(false);
-  const [debugLogs, setDebugLogs] = useState<DebugLog[]>([]);
+  // F6 (doc 12, "El handoff a humano") — Alma ahora puede derivar a un
+  // asesor (tool derivar_a_asesor en /api/chat). Este flag solo prende el
+  // banner; las respuestas del asesor humano ya llegan por el polling de
+  // /api/messages que existía desde antes (mensajes insertados vía
+  // /api/webhook), no hace falta tocar esa parte.
+  const [handoffActive, setHandoffActive] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const debugScrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -70,21 +70,18 @@ export function ChatWidget() {
 
     initSession();
 
-    const saved = localStorage.getItem('alianza_user_info');
-    if (saved) {
-      const parsedUser = JSON.parse(saved) as UserInfo;
-      setUserInfo(parsedUser);
-    }
-
+    // Los listeners se registran ANTES de tocar localStorage. Antes, si el
+    // JSON.parse de acá abajo tiraba (valor truncado por una pestaña cerrada
+    // a mitad de escritura, extensión, quota llena), el useEffect abortaba
+    // antes de llegar a los addEventListener — el botón de WhatsApp dejaba
+    // de abrir el chat, sin error visible, para siempre en ese navegador.
     const handleOpenWithMsg = (e: any) => {
       setIsOpen(true);
+      setChatOpenedAt(Date.now());
       const msg = e.detail?.message;
       const product = e.detail?.product;
 
-      // ✅ Guardar contexto del producto para enviarlo al agente
       if (product) {
-        // Guardar en sessionStorage para que processMessage lo use
-        sessionStorage.setItem('alma_product_context', product.name || '');
         const productInfoMsg = `📦 *Producto consultado:*\n\n🏷️ ${product.name}\n💰 USD ${product.price?.usd?.toLocaleString() || 'N/A'}${product.sku ? `\n🔖 SKU: ${product.sku}` : ''}${product.material ? `\n✨ Material: ${product.material}` : ''}`;
         setMessages(prev => [...prev, {
           id: 'product-' + Date.now(),
@@ -94,12 +91,14 @@ export function ChatWidget() {
         }]);
       }
 
-      const savedUserInfo = localStorage.getItem('alianza_user_info');
+      let savedUserInfo: string | null = null;
+      try {
+        savedUserInfo = localStorage.getItem('alianza_user_info');
+      } catch { /* localStorage inaccesible (modo privado, quota, etc.) */ }
+
       if (!savedUserInfo) {
-        // ✅ Guardar el mensaje pendiente y pedir datos inline en el chat
         setPendingText(msg);
         setNeedsInlineOnboarding(true);
-        // Agregar mensaje del agente pidiendo datos
         setMessages(prev => [...prev, {
           id: 'ask-info-' + Date.now(),
           text: 'Para poder asesorarte mejor, necesito tu nombre y número de WhatsApp. Por favor completa los datos debajo. 👇',
@@ -107,16 +106,21 @@ export function ChatWidget() {
           timestamp: new Date(),
         }]);
       } else if (msg) {
-        // ✅ FIX: Pasar user info directamente para evitar stale closure
-        const parsedUser = JSON.parse(savedUserInfo) as UserInfo;
-        processMessage(msg, parsedUser);
+        try {
+          const parsedUser = JSON.parse(savedUserInfo) as UserInfo;
+          processMessage(msg, parsedUser);
+        } catch {
+          localStorage.removeItem('alianza_user_info');
+          setPendingText(msg);
+          setNeedsInlineOnboarding(true);
+        }
       }
     };
 
     const handleOpenOnly = () => {
       setIsOpen(true);
-      // ✅ Limpiar contexto de producto al abrir chat genérico
-      sessionStorage.removeItem('alma_product_context');
+      setChatOpenedAt(Date.now());
+      setHandoffActive(false);
       // Resetear mensajes al bienvenida para empezar limpio
       setMessages([{
         id: 'welcome',
@@ -124,11 +128,28 @@ export function ChatWidget() {
         sender: 'agent',
         timestamp: new Date(),
       }]);
-      if (!localStorage.getItem('alianza_user_info')) setShowOnboarding(true);
+      let hasUser = false;
+      try {
+        hasUser = !!localStorage.getItem('alianza_user_info');
+      } catch { /* ver nota arriba */ }
+      if (!hasUser) setShowOnboarding(true);
     };
 
     window.addEventListener('open-chat-with-message', handleOpenWithMsg);
     window.addEventListener('open-chat-only', handleOpenOnly);
+
+    // El parse de localStorage va después de registrar los listeners, y
+    // envuelto en try/catch: si el valor guardado está corrupto, se limpia
+    // y se sigue de largo en vez de abortar el resto del efecto.
+    try {
+      const saved = localStorage.getItem('alianza_user_info');
+      if (saved) {
+        const parsedUser = JSON.parse(saved) as UserInfo;
+        setUserInfo(parsedUser);
+      }
+    } catch {
+      localStorage.removeItem('alianza_user_info');
+    }
 
     return () => {
       window.removeEventListener('open-chat-with-message', handleOpenWithMsg);
@@ -136,21 +157,44 @@ export function ChatWidget() {
     };
   }, []);
 
-  // Polling para recibir respuestas de n8n cada 2.5s
+  // Polling — trae mensajes insertados por fuera del POST /api/chat (ej. un
+  // handoff a humano vía /api/webhook). Antes dedupeaba por `id`, pero el id
+  // que el widget pinta localmente (Math.random) nunca matchea con el UUID
+  // de Postgres que vuelve del server: cada mensaje aparecía duplicado a los
+  // ≤3s. Ahora dedupea por (rol, texto, ventana de tiempo) y además ignora
+  // todo lo anterior a chatOpenedAt, para no pegar una charla de la semana
+  // pasada debajo del mensaje de bienvenida recién reseteado.
   useEffect(() => {
-    if (!userInfo?.phone || !isOpen) return;
+    if (!userInfo || !isOpen) return;
+
+    // Marca de agua: sólo se pide lo posterior a este timestamp. Antes cada
+    // tick de 3s traía la conversación entera desde el server (ver doc 16,
+    // 4.6). El filtro por (rol, texto, ventana) se mantiene igual como red
+    // de seguridad ante colisiones de timestamp.
+    let lastSeen = chatOpenedAt;
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch('/api/messages');
+        const res = await fetch(`/api/messages?since=${lastSeen}`);
         if (!res.ok) return;
 
         const data = await res.json();
         if (data.messages && data.messages.length > 0) {
+          const maxTimestamp = Math.max(...data.messages.map((m: any) => m.timestamp));
+          if (maxTimestamp > lastSeen) lastSeen = maxTimestamp;
+
           setMessages(prev => {
-            const newMessages = data.messages.filter((msg: any) => !prev.some(m => m.id === msg.id));
+            const newMessages = data.messages.filter((msg: any) => {
+              if (msg.timestamp < chatOpenedAt - 5000) return false; // charla vieja, no la de ahora
+              const sender = msg.role === 'assistant' ? 'agent' : 'user';
+              return !prev.some(m =>
+                m.text === msg.text &&
+                m.sender === sender &&
+                Math.abs(m.timestamp.getTime() - msg.timestamp) < 15000
+              );
+            });
             if (newMessages.length === 0) return prev;
-            
+
             return [...prev, ...newMessages.map((msg: any) => ({
               id: msg.id,
               text: msg.text,
@@ -159,11 +203,16 @@ export function ChatWidget() {
             }))];
           });
         }
-      } catch (err) { }
+      } catch (err) {
+        // Antes este catch quedaba vacío: si /api/messages empezaba a
+        // devolver 500 o la sesión expiraba, el polling fallaba en
+        // silencio para siempre. Ahora al menos queda en consola.
+        console.error('[CHAT_POLLING_ERROR]', err);
+      }
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [userInfo?.phone, isOpen]);
+  }, [userInfo, isOpen, chatOpenedAt]);
 
   useEffect(() => {
     // ✅ Auto-scroll al último mensaje usando scrollIntoView (funciona con ScrollArea)
@@ -181,13 +230,15 @@ export function ChatWidget() {
     }]);
   };
 
-  const addDebugLog = (success: boolean, data: any, error?: string) => {
-    setDebugLogs(prev => [...prev, {
-      timestamp: new Date().toLocaleTimeString(),
-      success,
-      error,
-      data
-    }]);
+  // Manda el lead a /api/leads → tabla `prospectos`. Antes el nombre y el
+  // WhatsApp que el visitante cargaba acá quedaban solo en localStorage: la
+  // joyería recibía cero leads del chat, que es la razón de ser del widget.
+  const saveLeadToServer = (data: UserInfo) => {
+    fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: data.name, phone: data.phone, source: 'chat_widget' }),
+    }).catch(() => { /* no bloquea la conversación si falla */ });
   };
 
   const handleOnboarding = (e: React.FormEvent) => {
@@ -195,9 +246,9 @@ export function ChatWidget() {
     if (!onboardingForm.name.trim() || onboardingForm.phone.length < 8) return;
 
     const data = { name: onboardingForm.name.trim(), phone: onboardingForm.phone };
-    localStorage.setItem('alianza_user_info', JSON.stringify(data));
+    try { localStorage.setItem('alianza_user_info', JSON.stringify(data)); } catch { /* localStorage inaccesible */ }
     setUserInfo(data);
-    // sessionId is already set via cookie/token logic
+    saveLeadToServer(data);
     setShowOnboarding(false);
 
     if (pendingText) {
@@ -211,9 +262,9 @@ export function ChatWidget() {
     if (!onboardingForm.name.trim() || onboardingForm.phone.length < 8) return;
 
     const data = { name: onboardingForm.name.trim(), phone: onboardingForm.phone };
-    localStorage.setItem('alianza_user_info', JSON.stringify(data));
+    try { localStorage.setItem('alianza_user_info', JSON.stringify(data)); } catch { /* localStorage inaccesible */ }
     setUserInfo(data);
-    // sessionId is already set via cookie/token logic
+    saveLeadToServer(data);
     setNeedsInlineOnboarding(false);
 
     // ✅ Confirmar en el chat que los datos fueron guardados
@@ -235,8 +286,15 @@ export function ChatWidget() {
     setIsSending(true);
     setIsTyping(true);
 
+    // F6 — streaming: antes se esperaba res.json() con la respuesta
+    // completa antes de mostrar nada. Ahora se lee el body como stream de
+    // líneas NDJSON (una línea = un evento) y se va completando un único
+    // mensaje de Alma a medida que llegan los deltas.
+    const streamId = Math.random().toString(36).substr(2, 9);
+    let streamedText = '';
+    let started = false;
+
     try {
-      // ✅ Migración a GPT-4o-mini Directo
       const history = messages.map(m => ({
         role: m.sender === 'user' ? 'user' : 'assistant',
         content: m.text
@@ -251,19 +309,68 @@ export function ChatWidget() {
         }),
       });
 
-      const result = await res.json();
-      setIsTyping(false);
-
-      if (res.ok && result.reply) {
-        addMessage(result.reply, 'agent');
-        addDebugLog(true, { reply: result.reply });
-      } else {
+      if (!res.ok || !res.body) {
+        const result = await res.json().catch(() => ({}));
+        setIsTyping(false);
         toast({
           variant: 'destructive',
           title: 'Error de Envío',
           description: result.error || 'No se pudo obtener respuesta del asesor.',
         });
-        addDebugLog(false, result, result.error);
+        setIsSending(false);
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          let evt: any;
+          try { evt = JSON.parse(line); } catch { continue; }
+
+          if (evt.type === 'delta') {
+            if (!started) {
+              started = true;
+              setIsTyping(false);
+              setMessages(prev => [...prev, { id: streamId, text: '', sender: 'agent', timestamp: new Date() }]);
+            }
+            streamedText += evt.text;
+            const snapshot = streamedText;
+            setMessages(prev => prev.map(m => m.id === streamId ? { ...m, text: snapshot } : m));
+          } else if (evt.type === 'error') {
+            setIsTyping(false);
+            toast({
+              variant: 'destructive',
+              title: 'Error de Envío',
+              description: evt.message || 'No se pudo obtener respuesta del asesor.',
+            });
+          } else if (evt.type === 'handoff') {
+            setHandoffActive(true);
+          } else if (evt.type === 'paused') {
+            // La sesión ya estaba pausada de antes (por ejemplo, la
+            // derivación pasó por WhatsApp y el cliente sigue escribiendo
+            // acá en el widget web — mismo sessionId, mismo cerebro). No es
+            // un error: el mensaje ya se guardó del lado del servidor, sólo
+            // no hay respuesta de Alma para este turno. Se reusa el mismo
+            // banner de "asesor humano" en vez de uno nuevo.
+            setIsTyping(false);
+            setHandoffActive(true);
+          }
+        }
+      }
+
+      if (!started) {
+        // El stream terminó sin mandar ningún delta (error temprano, ya avisado arriba)
+        setIsTyping(false);
       }
     } catch (error: any) {
       setIsTyping(false);
@@ -277,70 +384,56 @@ export function ChatWidget() {
     setIsSending(false);
   };
 
-  if (!isOpen) return null;
+  // Antes había un componente aparte (`WhatsappButton`, siempre montado en
+  // layout.tsx) que dibujaba este mismo ícono en la misma esquina fija —
+  // los dos elementos coexistían en el DOM (`fixed bottom-6 right-6` el
+  // botón, `fixed bottom-24 right-6` el panel), y con el panel abierto el
+  // botón quedaba tapado detrás. Se unificó acá: un solo elemento fijo en
+  // esa esquina, que es el botón cuando está cerrado y el panel cuando está
+  // abierto — nunca los dos a la vez. El ícono de WhatsApp se mantiene a
+  // propósito (no es un link real a WhatsApp, dispara el mismo evento
+  // `open-chat-only` de abajo) porque los clientes ya lo reconocen como "acá
+  // te contesto", y así se quedan en el chat propio en vez de irse a la app.
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent('open-chat-only'))}
+        aria-label="Abrir chat con Alma"
+        className="fixed bottom-6 right-6 z-50 group flex items-center justify-center w-14 h-14 bg-foreground text-background rounded-full shadow-lg hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
+      >
+        <span className="absolute inset-0 rounded-full bg-foreground opacity-30 group-hover:opacity-50 animate-ping"></span>
+        <span className="absolute inset-0 rounded-full bg-foreground opacity-100"></span>
+        <WhatsappIcon className="w-8 h-8 fill-current relative z-10" />
+      </button>
+    );
+  }
 
   return (
-    <div className="fixed bottom-24 right-6 w-[350px] sm:w-[450px] h-[650px] bg-background border border-[#d4af37]/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[100] animate-in slide-in-from-bottom-5 duration-300">
-      {/* Header */}
-      <div className="bg-[#d4af37] p-4 flex items-center justify-between text-white shadow-md shrink-0">
+    <div className="fixed bottom-24 right-6 w-[350px] sm:w-[450px] h-[650px] bg-background border border-gold/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[100] animate-in slide-in-from-bottom-5 duration-300">
+      {/* Header — antes bg-[#d4af37] con texto blanco: contraste 1.94:1,
+          falla WCAG AA por mucho. Ahora tinta con acento dorado (gold-soft
+          sobre foreground = 10.4:1). */}
+      <div className="bg-foreground p-4 flex items-center justify-between text-background shadow-md shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-background/10 flex items-center justify-center">
             <User className="h-5 w-5" />
           </div>
           <div>
             <h3 className="text-sm font-bold uppercase tracking-widest">{appSettings.chatAgentName}</h3>
-            <div className="flex items-center gap-1.5 text-[9px] uppercase font-bold opacity-80">
-              <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+            <div className="flex items-center gap-1.5 text-[9px] uppercase font-bold text-gold-soft">
+              <span className="w-1.5 h-1.5 bg-sage rounded-full animate-pulse" />
               Asesoría en vivo
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="hover:bg-white/10 text-white h-8 w-8">
+          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="hover:bg-background/10 text-background h-8 w-8">
             <X className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       <div className="flex flex-col flex-1 relative overflow-hidden">
-        {/* Debug Console Overlay */}
-        {showDebug && (
-          <div className="absolute inset-0 z-50 bg-slate-950/95 text-green-400 font-mono text-[10px] p-4 flex flex-col border-b border-white/10 overflow-hidden animate-in fade-in duration-200">
-            <div className="flex items-center justify-between mb-2 border-b border-green-400/20 pb-2">
-              <span className="flex items-center gap-2 uppercase tracking-widest font-bold">
-                <Terminal className="h-3 w-3" /> Monitor de Tráfico
-              </span>
-              <button onClick={() => setShowDebug(false)} className="hover:text-white"><X className="h-3 w-3" /></button>
-            </div>
-            <ScrollArea className="flex-1">
-              <div className="space-y-4">
-                {debugLogs.length === 0 ? (
-                  <div className="text-green-400/40 italic">Esperando actividad...</div>
-                ) : debugLogs.map((log, i) => (
-                  <div key={i} className={cn("border-l-2 pl-3 py-1", log.success ? "border-green-500" : "border-red-500")}>
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="bg-slate-800 px-1.5 rounded text-[8px]">{log.timestamp}</span>
-                      <span className={log.success ? "text-green-400" : "text-red-400"}>
-                        {log.success ? "SUCCESS" : "ERROR"}
-                      </span>
-                    </div>
-                    {log.error && <div className="text-red-400 mb-1">Error: {log.error}</div>}
-                    <div className="text-slate-400 text-[9px] mb-1">
-                      Latencia: <span className="text-white">{log.data?.duration || 'N/A'}</span>
-                    </div>
-                    <details className="mt-1">
-                      <summary className="cursor-pointer opacity-60">Payload</summary>
-                      <pre className="bg-black/50 p-2 rounded mt-1 overflow-x-auto text-[8px] text-white/90">
-                        {JSON.stringify(log.data?.payload, null, 2)}
-                      </pre>
-                    </details>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        )}
-
         {showOnboarding ? (
           <div className="flex-1 p-8 flex flex-col justify-center bg-secondary/10">
             <div className="text-center mb-8">
@@ -376,6 +469,12 @@ export function ChatWidget() {
           </div>
         ) : (
           <>
+            {handoffActive && (
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-primary/10 border-b border-primary/20 text-[11px] text-primary shrink-0">
+                <Phone className="h-3.5 w-3.5 shrink-0" />
+                <span>Te estamos derivando con un asesor humano — te va a responder por acá mismo.</span>
+              </div>
+            )}
             <ScrollArea className="flex-1 p-4 bg-secondary/5">
               <div className="space-y-4" ref={scrollRef}>
                 {messages.map((msg) => (
@@ -384,14 +483,14 @@ export function ChatWidget() {
                     className={cn(
                       "max-w-[85%] p-3 rounded-2xl text-sm shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-1 duration-300",
                       msg.sender === 'user'
-                        ? "ml-auto bg-[#d4af37] text-white rounded-tr-none"
-                        : "mr-auto bg-white text-slate-800 border border-[#d4af37]/10 rounded-tl-none"
+                        ? "ml-auto bg-foreground text-background rounded-tr-none"
+                        : "mr-auto bg-white text-foreground border border-gold/10 rounded-tl-none"
                     )}
                   >
                     <p className="whitespace-pre-line leading-relaxed" style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>{msg.text}</p>
                     <span className={cn(
                       "text-[8px] mt-1 block text-right",
-                      msg.sender === 'user' ? "text-white/70" : "text-slate-400"
+                      msg.sender === 'user' ? "text-background/70" : "text-muted-foreground"
                     )}>
                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
@@ -399,10 +498,10 @@ export function ChatWidget() {
                 ))}
 
                 {isTyping && (
-                  <div className="mr-auto bg-white text-slate-800 border border-[#d4af37]/10 p-3 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-[#d4af37]/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-[#d4af37]/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 bg-[#d4af37]/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="mr-auto bg-white text-foreground border border-gold/10 p-3 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-gold/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 bg-gold/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 bg-gold/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 )}
 
@@ -417,7 +516,7 @@ export function ChatWidget() {
                       <button
                         key={suggestion}
                         onClick={() => processMessage(suggestion)}
-                        className="text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-full border border-[#d4af37]/30 text-[#d4af37] hover:bg-[#d4af37] hover:text-white transition-colors duration-300 bg-white/50 backdrop-blur-sm"
+                        className="text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-full border border-gold/30 text-gold-ink hover:bg-gold hover:text-white transition-colors duration-300 bg-white/50 backdrop-blur-sm"
                       >
                         {suggestion}
                       </button>
@@ -459,14 +558,10 @@ export function ChatWidget() {
                     </form>
                   </div>
                 )}
-                {/* ✅ Typing indicator mientras Alma procesa */}
-                {isTyping && (
-                  <div className="mr-auto bg-card border border-primary/5 rounded-2xl rounded-tl-none p-3 flex items-center gap-1.5 shadow-sm">
-                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                )}
+                {/* Antes había un SEGUNDO indicador de "escribiendo" acá (idéntico en
+                    función, con otros estilos) que se renderizaba a la vez que el de
+                    arriba — dos globos de puntitos suspensivos superpuestos mientras
+                    Alma responde. Se borra, queda uno solo. */}
                 {/* ✅ Ancla para auto-scroll al final */}
                 <div ref={bottomRef} />
               </div>

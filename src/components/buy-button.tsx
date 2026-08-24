@@ -77,6 +77,15 @@ export function BuyButton({ product }: BuyButtonProps) {
 
       const result = await response.json();
 
+      // Antes esto asumía que result.redirect_url siempre venía bien formado
+      // y redirigía sin validar. Si n8n cambiaba el shape de la respuesta o
+      // Mercado Pago fallaba devolviendo 200 con otro formato, el usuario
+      // veía "¡Redirigiendo!" y terminaba en /undefined → 404, venta perdida
+      // sin ningún log.
+      if (!result?.redirect_url || typeof result.redirect_url !== 'string') {
+        throw new Error('El proveedor de pago no devolvió un link válido. Intentá de nuevo o escribinos por WhatsApp.');
+      }
+
       setState('redirecting');
 
       toast({
@@ -113,16 +122,18 @@ export function BuyButton({ product }: BuyButtonProps) {
 
   return (
     <>
+      {/* Antes: gradiente dorado con glow de color (from-primary via-yellow-500
+          to-primary + shadow-primary/25) — el tell de template más fuerte del
+          sitio. Ahora usa la variante default del botón (tinta sólida). */}
       <Button
         id="buy-now-button"
+        size="lg"
         onClick={() => setOpen(true)}
         disabled={isDisabled}
-        className="w-full h-14 bg-gradient-to-r from-primary via-yellow-500 to-primary hover:from-primary/90 hover:via-yellow-400 hover:to-primary/90 text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 group"
+        className="w-full group"
       >
         <CreditCard className="w-5 h-5 mr-2 transition-transform group-hover:scale-110" />
-        <span className="text-sm font-bold uppercase tracking-widest">
-          {isDisabled ? 'Agotado' : 'Comprar Ahora'}
-        </span>
+        {isDisabled ? 'Agotado' : 'Comprar Ahora'}
       </Button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -152,7 +163,7 @@ export function BuyButton({ product }: BuyButtonProps) {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold leading-snug">{product.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{product.category}</p>
-                <p className="font-headline text-xl text-primary font-bold mt-1">
+                <p className="price text-xl mt-1">
                   USD {product.price.usd.toLocaleString()}
                 </p>
               </div>
@@ -241,11 +252,15 @@ export function BuyButton({ product }: BuyButtonProps) {
               )}
 
               <div className="flex flex-col gap-3 pt-2">
+                {/* variant="payment": única excepción cromática permitida en el
+                    sistema (es el color de marca de Mercado Pago, no del sitio). */}
                 <Button
                   id="checkout-submit-button"
                   type="submit"
+                  size="lg"
+                  variant="payment"
                   disabled={state !== 'idle'}
-                  className="w-full h-12 bg-[#009ee3] hover:bg-[#007eb5] text-white font-bold shadow-md transition-all duration-200 hover:shadow-lg"
+                  className="w-full"
                 >
                   {(state === 'loading' || state === 'redirecting') && (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -253,11 +268,9 @@ export function BuyButton({ product }: BuyButtonProps) {
                   {state === 'idle' && (
                     <Lock className="w-4 h-4 mr-2" />
                   )}
-                  <span>
-                    {state === 'idle' && 'Pagar con Mercado Pago'}
-                    {state === 'loading' && 'Procesando...'}
-                    {state === 'redirecting' && 'Redirigiendo...'}
-                  </span>
+                  {state === 'idle' && 'Pagar con Mercado Pago'}
+                  {state === 'loading' && 'Procesando...'}
+                  {state === 'redirecting' && 'Redirigiendo...'}
                 </Button>
 
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">

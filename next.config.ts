@@ -5,11 +5,15 @@ import path from 'path';
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   typescript: {
-    // Ignoramos errores en build para mayor estabilidad en Hostinger
-    ignoreBuildErrors: true,
+    // `npx tsc --noEmit` da 0 errores (verificado 2026-08-17) — este flag no
+    // estaba tapando nada hoy, solo garantizaba que el próximo error de tipos
+    // llegara a producción sin avisar. Ver docs/2026-08-17_16_plan-de-ejecucion.md F2.7.
+    ignoreBuildErrors: false,
   },
   eslint: {
-    // Ignoramos errores de linting para mayor velocidad de despliegue
+    // ESLint recién se instaló (no estaba ni en devDependencies). Se deja en
+    // true una corrida más hasta limpiar el primer barrido de hallazgos —
+    // pasar a false en cuanto ese barrido esté limpio.
     ignoreDuringBuilds: true,
   },
   images: {

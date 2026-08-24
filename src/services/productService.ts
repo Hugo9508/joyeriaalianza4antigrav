@@ -6,7 +6,15 @@ import { Product, Category } from "@/lib/products";
  * Solo operaciones de LECTURA — la gestión se hace desde WordPress wp-admin.
  */
 
-export const getProducts = async (filters: { search?: string, category?: string, featured?: boolean, page?: number, per_page?: number } = {}): Promise<Product[]> => {
+export type ProductsResult = { products: Product[]; error: string | null };
+
+// Antes esto devolvía [] tanto si la categoría estaba vacía como si
+// WooCommerce respondía un 502 — /collections mostraba "No se encontraron
+// piezas en esta categoría" con el catálogo caído, y nadie se enteraba de
+// que Woo estaba roto. getProducts() sigue existiendo para no romper a
+// quien ya la use, pero delega en getProductsWithStatus(), que sí distingue
+// "vacío" de "error".
+export const getProductsWithStatus = async (filters: { search?: string, category?: string, featured?: boolean, page?: number, per_page?: number } = {}): Promise<ProductsResult> => {
   const params = new URLSearchParams();
   if (filters.search) params.append('search', filters.search);
   if (filters.category) params.append('category', filters.category);
@@ -18,18 +26,23 @@ export const getProducts = async (filters: { search?: string, category?: string,
     const response = await fetch(`/api/products?${params.toString()}`, {
       cache: 'no-store'
     });
-    
+
     if (!response.ok) {
       console.warn("API de productos no disponible.");
-      return []; 
+      return { products: [], error: 'No se pudo cargar el catálogo. Intentá de nuevo en unos minutos.' };
     }
-    
+
     const data = await response.json();
-    return Array.isArray(data) ? data : [];
+    return { products: Array.isArray(data) ? data : [], error: null };
   } catch (error) {
     console.error("Error de red en getProducts:", error);
-    return [];
+    return { products: [], error: 'No se pudo cargar el catálogo. Intentá de nuevo en unos minutos.' };
   }
+};
+
+export const getProducts = async (filters: { search?: string, category?: string, featured?: boolean, page?: number, per_page?: number } = {}): Promise<Product[]> => {
+  const { products } = await getProductsWithStatus(filters);
+  return products;
 };
 
 export const getProductById = async (id: string): Promise<Product | null> => {

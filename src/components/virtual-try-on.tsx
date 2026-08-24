@@ -9,7 +9,10 @@ interface VirtualTryOnProps { children: ReactNode; product: Product; }
 
 export function VirtualTryOn({ children, product }: VirtualTryOnProps) {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<'capture' | 'loading' | 'result' | 'error'>('capture');
+  // Antes arrancaba directo en 'capture' y prendía la cámara sola a los
+  // 300ms de abrir el modal — sin ningún consentimiento explícito para
+  // activar la cámara y mandar la foto a un servicio de IA externo.
+  const [step, setStep] = useState<'consent' | 'unsupported' | 'capture' | 'loading' | 'result' | 'error'>('consent');
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -29,6 +32,17 @@ export function VirtualTryOn({ children, product }: VirtualTryOnProps) {
 
   const stopCamera = () => { streamRef.current?.getTracks().forEach(t => t.stop()); streamRef.current = null; };
 
+  // Antes: sin categoría de pulsera, cualquier producto que no fuera arete o
+  // anillo caía en 'necklace' — una pulsera se probaba como collar. La
+  // prueba virtual es una foto de cara/cuello: no hay forma honesta de
+  // "probarse" una pulsera con eso, así que en vez de inventar una
+  // clasificación que el servicio de IA (n8n, fuera de este repo) no sabemos
+  // si soporta, se deshabilita la función para pulseras en vez de mentir.
+  const isBracelet = () => {
+    const cats = (product.categories || []).join(' ').toLowerCase();
+    return cats.includes('pulsera') || cats.includes('brazalete');
+  };
+
   const getJewelryType = () => {
     const cats = (product.categories || []).join(' ').toLowerCase();
     if (cats.includes('arete') || cats.includes('pendiente')) return 'earrings';
@@ -36,10 +50,22 @@ export function VirtualTryOn({ children, product }: VirtualTryOnProps) {
     return 'necklace';
   };
 
+  const acceptConsent = () => {
+    setStep('capture');
+    setResultImage(null);
+    setErrorMessage(null);
+    setTimeout(startCamera, 300);
+  };
+
   const handleOpen = (isOpen: boolean) => {
     setOpen(isOpen);
-    if (isOpen) { setStep('capture'); setResultImage(null); setErrorMessage(null); setTimeout(startCamera, 300); }
-    else { stopCamera(); }
+    if (isOpen) {
+      setResultImage(null);
+      setErrorMessage(null);
+      setStep(isBracelet() ? 'unsupported' : 'consent');
+    } else {
+      stopCamera();
+    }
   };
 
   const captureAndSend = async () => {
@@ -75,6 +101,23 @@ export function VirtualTryOn({ children, product }: VirtualTryOnProps) {
           </DialogTitle>
         </DialogHeader>
         <canvas ref={canvasRef} className="hidden" />
+        {step === 'consent' && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Para esto vamos a pedirte acceso a tu cámara y enviar la foto a nuestro servicio de generación de imágenes con IA, sólo para crear esta vista previa — no se guarda ni se usa para otro fin.
+            </p>
+            <Button onClick={acceptConsent} className="w-full h-12 gap-2">
+              <Camera className="h-4 w-4" /> Acepto, activar cámara
+            </Button>
+          </div>
+        )}
+        {step === 'unsupported' && (
+          <div className="space-y-4 text-center py-4">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              La prueba virtual está disponible para anillos, aros y collares. Para pulseras, escribinos por WhatsApp y te asesoramos con gusto.
+            </p>
+          </div>
+        )}
         {step === 'capture' && (
           <div className="space-y-4">
             <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg bg-black aspect-square object-cover" />

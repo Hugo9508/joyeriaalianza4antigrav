@@ -58,7 +58,7 @@ export default function Home() {
             Unión Eternamente <span className="italic font-light">Brillante</span>
           </h1>
           <p className="mb-8 md:mb-12 max-w-sm md:max-w-lg text-xs md:text-sm font-light leading-relaxed md:leading-loose tracking-wide text-gray-200 md:text-base animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            En Joyeria Alianzas, cada pieza es una promesa de amor y excelencia. Descubra nuestra colección curada en el corazón de Carrasco.
+            En Joyeria Alianzas, cada pieza es una promesa de amor y excelencia. Descubra nuestra colección curada en el corazón de Montevideo.
           </p>
           <div className="flex animate-fade-in-up flex-col gap-4 md:flex-row" style={{ animationDelay: '0.6s' }}>
             <Button asChild size="lg" variant="outline" className="bg-white text-foreground hover:bg-primary hover:text-white border-none uppercase tracking-[0.2em] font-bold text-[10px] md:text-xs">
@@ -109,7 +109,7 @@ export default function Home() {
                   <h3 className="text-sm md:text-base font-medium text-foreground tracking-wide">
                     {collection.name}
                   </h3>
-                  <p className="mt-1 text-sm text-primary font-medium">
+                  <p className="price mt-1 text-sm">
                     {collection.price}
                   </p>
                   <div className="mt-3 flex gap-2">
@@ -117,18 +117,13 @@ export default function Home() {
                       variant="outline"
                       className="flex-1 border-primary text-primary hover:bg-primary hover:text-white text-[10px] md:text-xs font-bold uppercase tracking-widest h-10"
                       onClick={() => {
+                        // Antes buscaba el widget viejo de @n8n/chat (#n8n-chat / window.n8nChat),
+                        // que ya no existe: la condición nunca se cumplía y siempre caía a
+                        // WhatsApp con un número distinto al oficial. Ahora abre el chat propio.
                         const msg = `¡Hola! Me interesa la ${collection.name}. ¿Podrían darme más información?`;
-                        const chatWindow = document.querySelector('#n8n-chat') || document.querySelector('.n8n-chat-widget');
-                        if (chatWindow || (window as any).n8nChat || document.querySelector('n8n-chat')) {
-                          window.dispatchEvent(new CustomEvent('n8n-chat:open'));
-                          setTimeout(() => {
-                            window.dispatchEvent(new CustomEvent('n8n-chat:send', {
-                              detail: { message: msg }
-                            }));
-                          }, 500);
-                        } else {
-                          window.open(`https://wa.me/59891264956?text=${encodeURIComponent(msg)}`, '_blank');
-                        }
+                        window.dispatchEvent(new CustomEvent('open-chat-with-message', {
+                          detail: { message: msg }
+                        }));
                       }}
                     >
                       Consultar
@@ -183,8 +178,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Reviews Section */}
-      <section className="bg-[#080b12] py-16 md:py-32">
+      {/* Reviews Section — antes bg-[#080b12] (negro azulado), un segundo
+          negro distinto del --foreground (#14120D, negro cálido) del resto
+          del sitio. */}
+      <section className="bg-foreground py-16 md:py-32">
         <div className="px-6 lg:px-8">
           <ReviewsCarousel />
         </div>

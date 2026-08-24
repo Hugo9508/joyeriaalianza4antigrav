@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
-import { WhatsappButton } from '@/components/whatsapp-button';
 import { ChatWidget } from '@/components/chat-widget';
 import { TickerTape } from '@/components/ticker-tape';
 import Script from 'next/script';
@@ -23,7 +22,7 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: 'Joyeria Alianzas - Alta Joyería en Montevideo',
-  description: 'Descubra piezas únicas que celebran la unión y el brillo eterno. Joyeria Alianzas: tradición y elegancia en el corazón de Carrasco.',
+  description: 'Descubra piezas únicas que celebran la unión y el brillo eterno. Joyeria Alianzas: tradición y elegancia en el corazón de Montevideo.',
 };
 
 export default function RootLayout({
@@ -47,8 +46,12 @@ export default function RootLayout({
           <Footer />
         </div>
         <div id="modal-root"></div>
+        {/* ChatWidget ahora dibuja su propio botón flotante (ícono de
+            WhatsApp) cuando está cerrado — antes era un componente aparte
+            (WhatsappButton) montado acá, y los dos elementos fijos en la
+            misma esquina se solapaban cuando el panel estaba abierto. Ver
+            el comentario en chat-widget.tsx. */}
         <ChatWidget />
-        <WhatsappButton />
         <Toaster />
       </body>
     </html>

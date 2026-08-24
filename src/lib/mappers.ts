@@ -111,7 +111,7 @@ export function mapWooCommerceProduct(wooProduct: any): Product {
     shortDescription: processDescription(wooProduct.short_description || ''),
     price: {
       usd: priceVal,
-      uyu: priceVal
+      uyu: null, // ver comentario en Product['price']['uyu'] (src/lib/products.ts)
     },
     regularPrice: regularPrice,
     promoPrice: promoPrice,

@@ -27,7 +27,11 @@ export function TickerTape() {
       ],
       "showSymbolLogo": false,
       "colorTheme": "dark",
-      "isTransparent": false,
+      // Antes: isTransparent false + fondo del wrapper #131722 (azul de
+      // TradingView, ajeno a la marca). Con isTransparent el widget no
+      // pinta su propio fondo y se ve la tinta del sitio (--foreground)
+      // por detrás, sin la costura de color.
+      "isTransparent": true,
       "displayMode": "adaptive",
       "locale": "es"
     });
@@ -36,7 +40,7 @@ export function TickerTape() {
   }, []);
 
   return (
-    <div className="w-full border-t border-white/5 bg-[#131722] overflow-hidden">
+    <div className="w-full border-t border-background/10 bg-foreground overflow-hidden">
       <div className="tradingview-widget-container" ref={containerRef}>
         <div className="tradingview-widget-container__widget"></div>
       </div>

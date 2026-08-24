@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { fetchWooCommerce } from '@/lib/woocommerce';
+import { mapWooCommerceProduct } from '@/lib/mappers';
 import { serverSettings } from '@/lib/settings.server';
 
 const checkoutRequestSchema = z.object({
@@ -36,7 +37,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
-    const price = parseFloat(product.sale_price || product.regular_price || product.price || '0');
+    // Antes tomaba sale_price sin mirar si la oferta seguía vigente (fechas
+    // de WooCommerce). La vidriera del sitio sí valida eso con
+    // isSaleActive() — el checkout no, así que una oferta vencida o
+    // programada a futuro cobraba de menos. Ahora usa el mismo mapper que
+    // usa la ficha de producto, para que haya un solo lugar donde se decide
+    // el precio.
+    const price = mapWooCommerceProduct(product).price.usd;
     const webhookToken = serverSettings.N8N_WEBHOOK_TOKEN;
     const webhookUrl = serverSettings.N8N_CHECKOUT_WEBHOOK_URL;
 
@@ -63,6 +70,12 @@ export async function POST(req: NextRequest) {
       ],
     };
 
+    // Antes este fetch no tenía timeout — a diferencia de /api/virtual-tryon,
+    // que sí lo tiene (AbortSignal.timeout(90000)). Si el webhook de n8n se
+    // cuelga o la conexión se estanca, esta request quedaba esperando sin
+    // límite, en el mismo proceso Node que RUNBOOK.md ya documenta que se
+    // cae por memoria en el hosting actual — un checkout colgado es exactamente
+    // el tipo de cosa que termina de tumbarlo.
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -70,16 +83,27 @@ export async function POST(req: NextRequest) {
         'X-Webhook-Token': webhookToken,
       },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(20000),
     });
 
     if (!response.ok) {
+      // Antes: errorData.errorMsg se devolvía tal cual al navegador — un
+      // mensaje de error que arma n8n, sin control de qué texto interno
+      // puede llegar a incluir. Se loguea server-side y al cliente va un
+      // mensaje genérico, mismo criterio que ya se aplicaba en
+      // /api/virtual-tryon y en el catch de abajo.
       const errorData = await response.json().catch(() => ({}));
-      return NextResponse.json({ error: errorData.errorMsg || 'Error en el webhook de pago' }, { status: response.status });
+      console.error('[CHECKOUT_WEBHOOK_ERROR]', response.status, errorData?.errorMsg || '(sin detalle)');
+      return NextResponse.json({ error: 'No se pudo procesar la compra en este momento.' }, { status: 502 });
     }
 
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error: any) {
+    if (error.name === 'TimeoutError') {
+      console.error('[CHECKOUT_ERROR] Timeout esperando al webhook de n8n');
+      return NextResponse.json({ error: 'El pago está tardando más de lo esperado. Intentá de nuevo en un momento.' }, { status: 504 });
+    }
     console.error('[CHECKOUT_ERROR]', error.message);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }

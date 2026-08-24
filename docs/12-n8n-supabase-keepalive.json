@@ -1,0 +1,128 @@
+{
+  "name": "Supabase Keep-Alive (cada 12h)",
+  "nodes": [
+    {
+      "id": "schedule-1",
+      "name": "Cada 12 horas",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 12
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-1",
+      "name": "Ping Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "https://jqzdtbxsehjyyyxukyaj.supabase.co/auth/v1/health",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_frgpsglHH_F5EC0GziJyVw_FBTvmOR2"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          },
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "if-1",
+      "name": "¿Respondió OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [760, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "set-1",
+      "name": "Registrar Fallo",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1020, 460],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-1",
+              "name": "alerta",
+              "type": "string",
+              "value": "=Supabase keep-alive falló: status {{ $json.statusCode }} en {{ $now.toISO() }}. Revisar si el proyecto se pausó."
+            }
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Cada 12 horas": {
+      "main": [
+        [
+          { "node": "Ping Supabase", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Ping Supabase": {
+      "main": [
+        [
+          { "node": "¿Respondió OK?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "¿Respondió OK?": {
+      "main": [
+        [],
+        [
+          { "node": "Registrar Fallo", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

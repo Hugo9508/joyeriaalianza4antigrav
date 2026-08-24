@@ -13,8 +13,8 @@ const WOO_CK = process.env.WOO_CONSUMER_KEY || '';
 const WOO_CS = process.env.WOO_CONSUMER_SECRET || '';
 
 // Cache en memoria
-const memCache = new Map<string, { ts: number; data: any }>();
-const pendingRequests = new Map<string, Promise<any>>();
+const memCache = new Map<string, { ts: number; data: any; total?: number; totalPages?: number }>();
+const pendingRequests = new Map<string, Promise<{ data: any; total?: number; totalPages?: number }>>();
 
 let categorySlugMap: Record<string, number> = {};
 let lastCategoryFetch = 0;
@@ -54,14 +54,17 @@ export async function getCategoryIdBySlug(slug: string): Promise<string | null> 
 }
 
 /**
- * Función principal de comunicación con WooCommerce.
+ * Núcleo compartido: pega a WooCommerce y devuelve data + metadata de
+ * paginación (headers X-WP-Total/X-WP-TotalPages que manda WC en listados).
+ * fetchWooCommerce() (abajo) es un wrapper que descarta la metadata para no
+ * romper a los ~10 callers existentes que solo esperan el array/objeto.
  */
-export async function fetchWooCommerce(
+async function fetchWooCommerceCore(
   endpoint: string,
   params: Record<string, string> = {},
   method: string = "GET",
   body?: any
-) {
+): Promise<{ data: any; total?: number; totalPages?: number }> {
   const base = cleanBaseUrl(WOO_BASE_URL);
 
   if (!base || !WOO_CK || !WOO_CS) {
@@ -83,11 +86,11 @@ export async function fetchWooCommerce(
   const cached = memCache.get(cacheKey);
 
   if (method.toUpperCase() === "GET" && cached && now - cached.ts <= TTL_MS) {
-    return cached.data;
+    return cached;
   }
 
   if (method.toUpperCase() === "GET" && pendingRequests.has(cacheKey)) {
-    return pendingRequests.get(cacheKey);
+    return pendingRequests.get(cacheKey)!;
   }
 
   const fetcher = (async () => {
@@ -113,18 +116,21 @@ export async function fetchWooCommerce(
       }
 
       const data = await response.json();
+      const total = Number(response.headers.get('x-wp-total')) || undefined;
+      const totalPages = Number(response.headers.get('x-wp-totalpages')) || undefined;
+      const result = { data, total, totalPages };
 
       if (method.toUpperCase() === "GET") {
-        memCache.set(cacheKey, { ts: Date.now(), data });
+        memCache.set(cacheKey, { ts: Date.now(), ...result });
       }
 
-      return data;
+      return result;
     } catch (err: any) {
       console.error(`FETCH_CRITICAL_FAILURE (${endpoint}):`, err.message);
 
       if (method.toUpperCase() === "GET" && cached) {
         console.warn(`Fallback a cache expirado para ${endpoint} tras error de red.`);
-        return cached.data;
+        return cached;
       }
 
       throw err;
@@ -138,4 +144,30 @@ export async function fetchWooCommerce(
   }
 
   return fetcher;
+}
+
+/**
+ * Función principal de comunicación con WooCommerce.
+ */
+export async function fetchWooCommerce(
+  endpoint: string,
+  params: Record<string, string> = {},
+  method: string = "GET",
+  body?: any
+) {
+  const { data } = await fetchWooCommerceCore(endpoint, params, method, body);
+  return data;
+}
+
+/**
+ * Igual que fetchWooCommerce pero además devuelve el total de resultados y
+ * de páginas — lo necesita /collections para paginar de verdad en vez de
+ * mostrar como máximo los primeros per_page productos.
+ */
+export async function fetchWooCommerceMeta(
+  endpoint: string,
+  params: Record<string, string> = {}
+): Promise<{ data: any; total: number; totalPages: number }> {
+  const { data, total, totalPages } = await fetchWooCommerceCore(endpoint, params, "GET");
+  return { data, total: total ?? (Array.isArray(data) ? data.length : 0), totalPages: totalPages ?? 1 };
 }

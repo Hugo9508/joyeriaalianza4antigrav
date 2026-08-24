@@ -170,7 +170,7 @@ export function ReviewsCarousel() {
           font-size: 11px;
           letter-spacing: 4px;
           text-transform: uppercase;
-          color: var(--gold, #d4a843);
+          color: hsl(var(--gold));
           font-weight: 500;
           margin-bottom: 12px;
           display: flex;
@@ -182,7 +182,7 @@ export function ReviewsCarousel() {
           display: inline-block;
           width: 32px;
           height: 1px;
-          background: var(--gold, #d4a843);
+          background: hsl(var(--gold));
           opacity: 0.5;
         }
 
@@ -197,7 +197,7 @@ export function ReviewsCarousel() {
 
         .reviews-title em {
           font-style: italic;
-          color: var(--gold, #d4a843);
+          color: hsl(var(--gold));
         }
 
         .score-block { text-align: right; flex-shrink: 0; }
@@ -218,9 +218,9 @@ export function ReviewsCarousel() {
           margin: 8px 0 6px;
         }
 
-        .star-icon { color: var(--gold, #d4a843); font-size: 17px; }
+        .star-icon { color: hsl(var(--gold)); font-size: 17px; }
 
-        .score-sub { font-size: 12px; color: #6b7280; letter-spacing: 0.5px; }
+        .score-sub { font-size: 12px; color: hsl(var(--background) / 55%); letter-spacing: 0.5px; }
 
         .google-badge {
           display: inline-flex;
@@ -231,7 +231,7 @@ export function ReviewsCarousel() {
           border: 1px solid rgba(255,255,255,0.06);
           border-radius: 20px;
           font-size: 11px;
-          color: #6b7280;
+          color: hsl(var(--background) / 55%);
         }
 
         .carousel-wrap { position: relative; }
@@ -276,7 +276,7 @@ export function ReviewsCarousel() {
           font-family: var(--font-headline, 'Cormorant Garamond', serif);
           font-size: 130px;
           font-weight: 300;
-          color: rgba(212,168,67,0.08);
+          color: hsl(var(--gold) / 0.08);
           line-height: 1;
           pointer-events: none;
           transition: color 0.3s;
@@ -285,13 +285,13 @@ export function ReviewsCarousel() {
         .review-card:hover {
           transform: translateY(-5px);
           box-shadow: 0 28px 64px rgba(0,0,0,0.5);
-          border-color: rgba(212,168,67,0.22);
+          border-color: hsl(var(--gold) / 0.22);
         }
 
-        .review-card:hover::before { color: rgba(212,168,67,0.18); }
+        .review-card:hover::before { color: hsl(var(--gold) / 0.18); }
 
         .card-stars { display: flex; gap: 3px; }
-        .card-star { color: var(--gold, #d4a843); font-size: 14px; }
+        .card-star { color: hsl(var(--gold)); font-size: 14px; }
 
         .card-text {
           font-size: 14px;
@@ -333,17 +333,17 @@ export function ReviewsCarousel() {
           text-overflow: ellipsis;
         }
 
-        .author-meta { font-size: 11px; color: #6b7280; margin-top: 2px; }
+        .author-meta { font-size: 11px; color: hsl(var(--background) / 55%); margin-top: 2px; }
 
         .author-badge {
           font-size: 10px;
-          color: var(--gold, #d4a843);
-          background: rgba(212,168,67,0.12);
+          color: hsl(var(--gold));
+          background: hsl(var(--gold) / 0.12);
           padding: 3px 9px;
           border-radius: 10px;
           font-weight: 500;
           white-space: nowrap;
-          border: 1px solid rgba(212,168,67,0.15);
+          border: 1px solid hsl(var(--gold) / 0.15);
         }
 
         .review-controls {
@@ -358,13 +358,15 @@ export function ReviewsCarousel() {
 
         .review-dot {
           height: 2px;
+          border: none;
+          padding: 0;
           border-radius: 2px;
           background: rgba(255,255,255,0.1);
           cursor: pointer;
           transition: all 0.35s ease;
         }
 
-        .review-dot.active { background: var(--gold, #d4a843); }
+        .review-dot.active { background: hsl(var(--gold)); }
 
         .review-arrows { display: flex; gap: 10px; }
 
@@ -381,9 +383,9 @@ export function ReviewsCarousel() {
         }
 
         .review-arrow:hover:not(:disabled) {
-          background: rgba(212,168,67,0.12);
-          border-color: rgba(212,168,67,0.3);
-          color: var(--gold, #d4a843);
+          background: hsl(var(--gold) / 0.12);
+          border-color: hsl(var(--gold) / 0.3);
+          color: hsl(var(--gold));
           transform: scale(1.08);
         }
 
@@ -409,27 +411,27 @@ export function ReviewsCarousel() {
           color: var(--white, #ffffff);
         }
 
-        .footer-text em { color: var(--gold, #d4a843); font-style: italic; }
+        .footer-text em { color: hsl(var(--gold)); font-style: italic; }
 
         .footer-link {
           display: inline-flex;
           align-items: center;
           gap: 8px;
           padding: 12px 24px;
-          border: 1px solid rgba(212,168,67,0.3);
+          border: 1px solid hsl(var(--gold) / 0.3);
           border-radius: 40px;
           font-size: 13px;
           font-weight: 500;
-          color: var(--gold, #d4a843);
+          color: hsl(var(--gold));
           text-decoration: none;
           transition: all 0.22s;
-          background: rgba(212,168,67,0.12);
+          background: hsl(var(--gold) / 0.12);
           letter-spacing: 0.3px;
         }
 
         .footer-link:hover {
-          background: rgba(212,168,67,0.2);
-          box-shadow: 0 4px 20px rgba(212,168,67,0.15);
+          background: hsl(var(--gold) / 0.2);
+          box-shadow: 0 4px 20px hsl(var(--gold) / 0.15);
           transform: translateY(-1px);
         }
 
@@ -527,12 +529,18 @@ export function ReviewsCarousel() {
             {/* CONTROLS */}
             <div className="review-controls">
                 <div className="review-dots">
+                    {/* Antes: <div onClick>, invisible para teclado y
+                        lectores de pantalla — un <button> real con
+                        aria-label/aria-current arregla ambas cosas. */}
                     {REVIEWS.map((_, i) => (
-                        <div
+                        <button
                             key={i}
+                            type="button"
                             className={`review-dot ${i === index ? "active" : ""}`}
                             style={{ width: i === index ? 28 : 8 }}
                             onClick={() => setIndex(Math.min(i, maxIndex))}
+                            aria-label={`Ir a la reseña ${i + 1} de ${REVIEWS.length}`}
+                            aria-current={i === index}
                         />
                     ))}
                 </div>

@@ -4,71 +4,272 @@
 
 @layer base {
   :root {
-    --background: 40 11% 97%; /* #f8f7f6 */
-    --foreground: 41 29% 8%; /* #1a170f */
-    --card: 0 0% 100%;
-    --card-foreground: 41 29% 8%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 41 29% 8%;
-    --primary: 45 68% 52%; /* #d4af37 */
-    --primary-foreground: 41 29% 8%;
-    --secondary: 0 0% 98%; /* #f9f9f9 */
-    --secondary-foreground: 41 29% 8%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 159 14% 49%; /* #6B9080 */
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 45 68% 52%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    /* ───────── SUPERFICIES ─────────
+       Blancos cálidos, nunca #fff puro en el fondo: el papel de catálogo tiene temperatura. */
+    --background:        38 30% 97%;   /* #FAF8F4  Alabastro — fondo base */
+    --surface:           0 0% 100%;    /* #FFFFFF  tarjeta / panel elevado */
+    --surface-sunken:    36 22% 94%;   /* #F2EFE9  fondo hundido: bloques de imagen, secciones alternas */
+    --card:              0 0% 100%;
+    --card-foreground:   40 24% 6%;
+    --popover:           0 0% 100%;
+    --popover-foreground:40 24% 6%;
+
+    /* ───────── TINTA ─────────
+       #14120D sobre #FAF8F4 = 17.6:1. Es el color del precio, del CTA primario y de los títulos. */
+    --foreground:        40 24% 6%;    /* #14120D  Ónix cálido */
+    --muted:             36 22% 94%;   /* #F2EFE9 */
+    --muted-foreground:  30  6% 35%;   /* #5F5952  6.5:1 sobre background — AA en cualquier tamaño */
+    --subtle-foreground: 33  8% 51%;   /* #8B8378  3.4:1 — SOLO para texto ≥19px o decorativo */
+
+    /* ───────── ORO ─────────
+       Tres pesos. El oro es metal: filetes, íconos, eyebrows. NUNCA texto de párrafo ni precio. */
+    --gold:              33 34% 51%;   /* #B08D57  oro de marca (filetes, íconos, fondos de badge) */
+    --gold-ink:          40 54% 30%;   /* #7A5C24  oro legible: 5.9:1 sobre background — links, eyebrows */
+    --gold-soft:         38 53% 68%;   /* #D9BE84  oro sobre superficie oscura: 10.4:1 sobre --foreground */
+    --gold-wash:         33 34% 51% / 0.08; /* veladura para fondos de badge / hover */
+
+    /* ───────── ACENTO SECUNDARIO ─────────
+       Verde salvia frío-neutro. Reemplaza a TODOS los green-500/600 de WhatsApp del sitio. */
+    --sage:             155 14% 40%;   /* #587A6B */
+    --sage-foreground:   38 30% 97%;
+
+    /* ───────── PRIMARIO / SEMÁNTICOS ─────────
+       primary = tinta, no oro. El CTA de una casa de joyería es negro. */
+    --primary:           40 24% 6%;
+    --primary-foreground:38 30% 97%;
+    --secondary:         36 22% 94%;
+    --secondary-foreground: 40 24% 6%;
+    --accent:            33 34% 51%;   /* = gold, para compatibilidad con shadcn */
+    --accent-foreground: 40 24% 6%;
+    --destructive:        4 62% 42%;   /* #AC2E28  bordó, no rojo semáforo */
+    --destructive-foreground: 38 30% 97%;
+    --success:          155 14% 40%;
+    --warning:           33 44% 44%;   /* #A2703F  ámbar terroso para "Bajo Pedido" */
+
+    /* ───────── BORDES ───────── */
+    --border:            36 16% 88%;   /* #E5E0D8  filete decorativo (1.2:1, no informativo) */
+    --border-strong:     36 10% 51%;   /* #8C8477  3.5:1 — inputs, controles, todo lo interactivo */
+    --input:             36 10% 51%;
+    --ring:              40 54% 30%;   /* #7A5C24 — DISTINTO del primario, si no el foco es invisible */
+
+    /* ───────── RADIOS ─────────
+       Radios chicos. rounded-2xl en tarjetas de producto es lenguaje de app, no de joyería. */
+    --radius-none: 0px;
+    --radius-xs:   2px;   /* imágenes de producto, tarjetas */
+    --radius-sm:   4px;   /* inputs, badges */
+    --radius-md:   6px;   /* botones */
+    --radius-lg:  10px;   /* modales, paneles */
+    --radius-full: 9999px;/* solo avatares y dots */
+    --radius: var(--radius-md); /* compat shadcn */
+
+    /* ───────── SOMBRAS ─────────
+       Cálidas, bajísima alpha, sin glows de color. Prohibido shadow-{color}/25. */
+    --shadow-hairline: 0 0 0 1px hsl(36 16% 88%);
+    --shadow-xs:  0 1px 2px hsl(40 24% 6% / 0.04);
+    --shadow-sm:  0 2px 8px hsl(40 24% 6% / 0.05);
+    --shadow-md:  0 8px 24px hsl(40 24% 6% / 0.07);
+    --shadow-lg:  0 20px 56px hsl(40 24% 6% / 0.10);
+    --shadow-modal: 0 32px 80px hsl(40 24% 6% / 0.22);
+
+    /* ───────── MOVIMIENTO ─────────
+       Un único set. Hoy conviven 200/300/500/700/1000ms + 0.2s/0.22s/0.35s/0.5s sin criterio. */
+    --dur-instant: 120ms;  /* feedback de tap */
+    --dur-fast:    200ms;  /* hover de color, foco */
+    --dur-base:    320ms;  /* entradas, aperturas */
+    --dur-slow:    600ms;  /* zoom de imagen, parallax */
+    --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);      /* el "expo out" — el que se siente caro */
+    --ease-in-out:   cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ───────── RITMO ─────────
+       Escala de 4px con saltos de sección fluidos. */
+    --space-1:  0.25rem;  --space-2:  0.5rem;   --space-3:  0.75rem;
+    --space-4:  1rem;     --space-5:  1.5rem;   --space-6:  2rem;
+    --space-7:  3rem;     --space-8:  4rem;     --space-9:  6rem;
+    --space-10: 8rem;     --space-11: 12rem;
+    --section-y:  clamp(4.5rem, 9vw, 9rem);       /* padding vertical de sección */
+    --section-y-lg: clamp(6rem, 13vw, 13rem);     /* secciones "de respiro" (manifiesto, cierre) */
+    --gutter:     clamp(1.25rem, 5vw, 3rem);      /* padding lateral ÚNICO del sitio */
+    --container:  1280px;                          /* ancho máximo ÚNICO del sitio */
+
+    /* ───────── TIPOGRAFÍA ───────── */
+    --font-headline: var(--font-playfair), 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --font-body:     var(--font-manrope), 'Manrope', system-ui, -apple-system, sans-serif;
+    --white: #ffffff; /* usada por reviews-carousel.tsx */
   }
 
+  /* Dark mode: hoy es CÓDIGO MUERTO — layout.tsx fuerza className="light".
+     Estos valores quedan listos para cuando se active el toggle. */
   .dark {
-    --background: 41 29% 8%; /* #1a170f */
-    --foreground: 40 11% 97%; /* #f8f7f6 */
-    --card: 41 29% 12%; /* #201d12 */
-    --card-foreground: 40 11% 97%;
-    --popover: 41 29% 8%;
-    --popover-foreground: 40 11% 97%;
-    --primary: 45 68% 52%; /* #d4af37 */
-    --primary-foreground: 41 29% 8%;
-    --secondary: 41 29% 15%; /* #33302a */
-    --secondary-foreground: 40 11% 97%;
-    --muted: 41 29% 15%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 159 14% 49%; /* #6B9080 */
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 41 29% 15%;
-    --input: 41 29% 15%;
-    --ring: 45 68% 52%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --background:        40 24% 6%;    /* #14120D */
+    --surface:           38 20% 10%;   /* #1E1A14 */
+    --surface-sunken:    40 24% 4%;
+    --card:              38 20% 10%;
+    --card-foreground:   38 30% 97%;
+    --popover:           38 20% 10%;
+    --popover-foreground:38 30% 97%;
+    --foreground:        38 30% 97%;
+    --muted:             38 16% 14%;
+    --muted-foreground:  36 10% 68%;   /* #B4ABA0  8.1:1 sobre background oscuro */
+    --subtle-foreground: 36  8% 52%;
+    --gold:              38 53% 68%;   /* en oscuro sube a --gold-soft */
+    --gold-ink:          38 53% 68%;
+    --gold-soft:         33 34% 51%;
+    --sage:             155 18% 58%;
+    --primary:           38 30% 97%;
+    --primary-foreground:40 24% 6%;
+    --secondary:         38 16% 14%;
+    --secondary-foreground: 38 30% 97%;
+    --accent:            38 53% 68%;
+    --accent-foreground: 40 24% 6%;
+    --destructive:        4 52% 52%;
+    --destructive-foreground: 38 30% 97%;
+    --border:            38 14% 18%;
+    --border-strong:     36 10% 38%;
+    --input:             36 10% 38%;
+    --ring:              38 53% 68%;
+    --shadow-hairline: 0 0 0 1px hsl(38 14% 18%);
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
+
+  html { scroll-behavior: smooth; }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
-  ::selection {
-      @apply bg-primary text-primary-foreground;
+
+  /* Playfair es una Didone: a tamaño display necesita tracking negativo. */
+  h1, h2, h3, .font-headline {
+    font-family: var(--font-headline);
+    font-weight: 400;
+    letter-spacing: -0.02em;
   }
+
+  /* Números de precio siempre tabulares: en una grilla, los precios se alinean. */
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  ::selection { @apply bg-foreground text-background; }
+
+  /* Foco visible y consistente en TODO lo enfocable, incluidos los <button> crudos
+     de footer.tsx y reviews-carousel.tsx que hoy no tienen ninguno. */
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Contenedor ÚNICO. Reemplaza max-w-screen-xl / max-w-[1280px] / max-w-[1440px] /
+     max-w-screen-lg / 1140px que hoy conviven en 5 archivos. */
+  .container-boutique {
+    width: 100%;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+  .section      { padding-block: var(--section-y); }
+  .section-lg   { padding-block: var(--section-y-lg); }
+
+  /* El eyebrow: el único lugar del sitio donde va font-bold + uppercase + tracking extremo.
+     Piso 11px — reemplaza los text-[10px] y text-[8px] repartidos por todo el proyecto. */
+  .eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.6875rem;      /* 11px */
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: hsl(var(--gold-ink));
+  }
+  .eyebrow--onDark { color: hsl(var(--gold-soft)); }
+
+  /* Filete: la microdecoración de marca. Reemplaza los border-b sueltos. */
+  .rule-gold { border-block-end: 1px solid hsl(var(--gold) / 0.35); }
+
+  /* Precio. Tinta, Playfair, tabular. NUNCA text-primary dorado. */
+  .price {
+    font-family: var(--font-headline);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    color: hsl(var(--foreground));
+  }
+  .price--strike {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+    text-decoration: line-through;
+    text-decoration-color: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Link de texto con filete — el hover "caro": el filete crece, el color no salta. */
+  .link-underline {
+    position: relative;
+    color: hsl(var(--foreground));
+    text-decoration: none;
+  }
+  .link-underline::after {
+    content: '';
+    position: absolute; left: 0; bottom: -3px;
+    width: 100%; height: 1px;
+    background: hsl(var(--gold));
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .link-underline:hover::after { transform: scaleX(1); transform-origin: left; }
+
+  /* Estilos del HTML de WooCommerce. Antes .description-content NO TENÍA NINGUNA REGLA
+     en todo el proyecto: la descripción del producto salía sin formato. */
+  .description-content {
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    color: hsl(var(--muted-foreground));
+  }
+  .description-content > * + *      { margin-block-start: 1em; }
+  .description-content p            { max-width: 62ch; }
+  .description-content strong       { color: hsl(var(--foreground)); font-weight: 600; }
+  .description-content ul           { list-style: none; padding-inline-start: 0; }
+  .description-content ul > li      { position: relative; padding-inline-start: 1.25rem; }
+  .description-content ul > li::before {
+    content: ''; position: absolute; left: 0; top: 0.7em;
+    width: 6px; height: 1px; background: hsl(var(--gold));
+  }
+  .description-content h2,
+  .description-content h3 {
+    font-family: var(--font-body);
+    font-size: 0.6875rem; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: hsl(var(--foreground));
+    margin-block-start: 2em;
+  }
+  .description-content img { border-radius: var(--radius-xs); }
+
+  /* Skeleton sin spinner. Antes collections/page.tsx apilaba
+     animate-pulse + <Loader2 animate-spin>: dos indicadores para una sola espera. */
+  .skeleton {
+    background: linear-gradient(90deg,
+      hsl(var(--muted)) 0%, hsl(var(--surface-sunken)) 50%, hsl(var(--muted)) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s var(--ease-in-out) infinite;
+    border-radius: var(--radius-xs);
+  }
+  @keyframes shimmer { to { background-position: -200% 0; } }
 }

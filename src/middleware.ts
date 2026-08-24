@@ -11,6 +11,13 @@ const RATE_LIMITS: Record<string, number> = {
   '/api/checkout': 8,
   '/api/webhook': 60,
   '/api/virtual-tryon': 5,
+  // /api/agent (puente de WhatsApp vía n8n) ya limita por sessionId/contacto
+  // adentro de la propia ruta — ver src/app/api/agent/route.ts. Acá, a nivel
+  // IP, un techo alto a propósito: TODOS los contactos de WhatsApp le pegan
+  // desde la misma IP de n8n, así que un límite ajustado por IP terminaría
+  // limitando a todos los clientes de WhatsApp combinados como si fueran
+  // uno. Esto es solo backstop contra un token comprometido o un loop roto.
+  '/api/agent': 300,
 };
 
 const hits = new Map<string, { count: number; resetAt: number }>();
@@ -46,10 +53,40 @@ function getClientIp(request: NextRequest): string {
   );
 }
 
+// F6 (doc 16, backlog) — antes no había CSP porque hacía falta inventariar
+// primero qué orígenes externos carga el sitio de verdad (grep sobre src/):
+// TradingView (ticker-tape), el CDN de video de Temu (hero, hasta que 4.3
+// lo autohospede), Google Maps (iframe del footer/contacto), imgur (fotos
+// de reseñas) y Unsplash/picsum (placeholders). OpenAI/WooCommerce/Supabase
+// NO entran acá — el navegador nunca les pega directo, siempre pasa por
+// nuestras propias rutas /api/*.
+//
+// ⚠️ No se pudo probar en vivo contra un navegador real: el sandbox donde
+// se escribió esto no tiene salida de red hacia tradingview.com ni
+// google.com, así que el comodín de TradingView (frame-src/connect-src) es
+// la mejor conjetura, no algo verificado cargando el widget. Si algo se
+// rompe con la consola marcando "Refused to ... because it violates the
+// following Content Security Policy directive", es acá.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https://placehold.co https://i.imgur.com https://images.unsplash.com https://picsum.photos https://joyeriabd.a380.com.br",
+  "media-src 'self' https://goods-vod.kwcdn.com",
+  "font-src 'self' data:",
+  "connect-src 'self' https://*.tradingview.com",
+  "frame-src https://www.google.com https://*.tradingview.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'self'",
+].join('; ');
+
 function withSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  response.headers.set('Content-Security-Policy', CSP);
   return response;
 }
 

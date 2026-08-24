@@ -15,14 +15,17 @@ export function WhatsappButton() {
         }
     };
 
+    // Antes: #25D366 fijo, contraste ícono/fondo 1.98:1 (falla incluso el
+    // mínimo de 3:1 para gráficos). Ahora usa la tinta del sitio — el ping
+    // respeta prefers-reduced-motion vía la regla global de globals.css.
     return (
-        <button 
+        <button
             onClick={handleOpenChat}
             aria-label="Contactar Asesoría"
-            className="fixed bottom-6 right-6 z-50 group flex items-center justify-center w-14 h-14 bg-[#25D366] text-white rounded-full shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300"
+            className="fixed bottom-6 right-6 z-50 group flex items-center justify-center w-14 h-14 bg-foreground text-background rounded-full shadow-lg hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
         >
-            <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-30 group-hover:opacity-50 animate-ping"></span>
-            <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-100"></span>
+            <span className="absolute inset-0 rounded-full bg-foreground opacity-30 group-hover:opacity-50 animate-ping"></span>
+            <span className="absolute inset-0 rounded-full bg-foreground opacity-100"></span>
             <WhatsappIcon className="w-8 h-8 fill-current relative z-10" />
         </button>
     )

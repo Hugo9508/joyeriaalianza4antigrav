@@ -14,7 +14,14 @@ export interface Product {
   shortDescription?: string;
   price: {
     usd: number;
-    uyu: number;
+    // Antes devolvía el mismo número que `usd` (doc 16, backlog) — una
+    // mentira silenciosa: nada lo usa hoy, pero el primer lugar que lo
+    // renderizara iba a mostrar un anillo de USD 900 como "$U 900". No hay
+    // una fuente de tipo de cambio integrada en este repo, así que en vez
+    // de inventar una conversión, queda en null — TypeScript obliga a
+    // cualquier consumidor futuro a manejar el caso "no hay conversión
+    // real" en vez de confiar en un número fabricado.
+    uyu: number | null;
   };
   regularPrice: number;
   promoPrice?: number;

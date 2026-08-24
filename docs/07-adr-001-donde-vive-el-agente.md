@@ -1,7 +1,7 @@
 ---
 titulo: "ADR-001 — Dónde vive el agente Alma"
 id: ADR-001
-estado: Propuesto
+estado: "Adoptado (Opción C) — lado Next.js implementado el 2026-08-24, ver 17-fixes-f1-f5-aplicados.md Addendum 4. Canal WhatsApp/n8n EN PAUSA por decisión del mismo día (Addendum 5): por ahora solo Alma en el sitio web, sin conectar n8n para WhatsApp. /api/agent queda construido y sin usar."
 fecha: 2026-08-14
 supersede: ninguno
 relacionado: 01-arquitectura.md
@@ -10,7 +10,7 @@ decisores: Equipo técnico Joyería Alianza
 
 # ADR-001 — Dónde vive el agente Alma
 
-**Estado:** Propuesto
+**Estado:** Adoptado (Opción C) — implementación parcial, y a propósito: `src/lib/agent/core.ts` y `/api/agent` ya existen y pasan build/tsc (2026-08-24), pero el mismo día se decidió no usar el canal de WhatsApp por ahora — solo Alma en el sitio web, sin conectar n8n para eso (Addendum 5 de `17-fixes-f1-f5-aplicados.md`). El cerebro (`runAgentTurn()`) ya es único e independiente de n8n para el canal web, que es lo que sí está en uso. Si más adelante se retoma WhatsApp, `19-contrato-n8n-api-agent.md` tiene el paso a paso de qué reconfigurar en el workflow.
 **Fecha:** 2026-08-14
 
 ---

@@ -1,12 +1,12 @@
 import { fetchWooCommerce } from '@/lib/woocommerce';
 import { mapWooCommerceProduct } from '@/lib/mappers';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight, Truck, ShieldCheck, Tag } from 'lucide-react';
 import { WhatsAppProductButton } from '@/components/whatsapp-product-button';
 import { BuyButton } from '@/components/buy-button';
+import { ProductGallery } from '@/components/product-gallery';
 
 async function getProduct(id: string) {
   try {
@@ -28,24 +28,18 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const isBackorder = product.stockStatus === 'on_backorder';
   const statusLabel = isBackorder ? 'Bajo Pedido' : 'En Stock';
+  // Antes: text-green-600 bg-green-100 (contraste 3.00:1) y text-orange-600
+  // bg-orange-100 (3.11:1) con texto de 12px bold — los dos fallan AA (min
+  // 4.5:1). --sage y --warning están calibrados contra WCAG AA.
   const statusColor = isBackorder
-    ? 'text-orange-600 bg-orange-100 border-orange-200'
-    : 'text-green-600 bg-green-100 border-green-200';
+    ? 'text-warning bg-warning/10 border-warning/20'
+    : 'text-sage bg-sage/10 border-sage/20';
 
   return (
     <div className="flex-grow flex justify-center py-6 lg:py-16 px-4 md:px-8 pt-24 md:pt-32">
       <div className="w-full max-w-[1280px] grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
         <div className="lg:col-span-7">
-          <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg bg-secondary">
-            <Image
-              src={product.images[0] || 'https://placehold.co/600x800?text=Joyeria'}
-              alt={product.name}
-              fill
-              className="object-cover"
-              priority
-              unoptimized
-            />
-          </div>
+          <ProductGallery images={product.images} alt={product.name} />
         </div>
         <div className="lg:col-span-5 flex flex-col pt-4">
           <div className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground mb-6 uppercase tracking-wider">
@@ -63,7 +57,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   USD {product.regularPrice.toLocaleString()}
                 </span>
               )}
-              <span className="font-headline text-3xl text-primary">USD {product.price.usd.toLocaleString()}</span>
+              <span className="price text-3xl">USD {product.price.usd.toLocaleString()}</span>
             </div>
 
             <div className="flex gap-2">

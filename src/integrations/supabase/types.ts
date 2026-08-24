@@ -70,6 +70,42 @@ export type Database = {
         }
         Relationships: []
       }
+      // NOTA: esta tabla existe en el proyecto (confirmado por auditoría) pero
+      // este tipo es una aproximación manual, NO generada contra el schema
+      // real — no tengo acceso de lectura a ese proyecto de Supabase desde
+      // acá. Nombres de columna a confirmar: nombre/telefono/canal/notas.
+      // Regenerar con `supabase gen types typescript` en cuanto se pueda
+      // (doc 12, hallazgo 🟡-21) para que esto deje de ser un placeholder.
+      prospectos: {
+        Row: {
+          id: string
+          nombre: string
+          telefono: string
+          canal: string | null
+          notas: string | null
+          session_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          nombre: string
+          telefono: string
+          canal?: string | null
+          notas?: string | null
+          session_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          nombre?: string
+          telefono?: string
+          canal?: string | null
+          notas?: string | null
+          session_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

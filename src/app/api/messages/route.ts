@@ -14,11 +14,24 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const { data: messages, error } = await getSupabaseAdmin()
+    // ?since=<epoch ms>: el polling del widget (cada 3s) antes traía la
+    // charla completa en cada tick. Con `since` sólo trae lo nuevo — sin
+    // índice sobre (session_id, created_at) esto sigue siendo un table scan
+    // por sesión (ver doc 16, 4.6: falta CREATE INDEX en producción).
+    const sinceParam = req.nextUrl.searchParams.get('since');
+    const since = sinceParam ? Number(sinceParam) : null;
+
+    let query = getSupabaseAdmin()
       .from('chat_messages')
       .select('*')
       .eq('session_id', sessionToken)
       .order('created_at', { ascending: true });
+
+    if (since && !Number.isNaN(since)) {
+      query = query.gt('created_at', new Date(since).toISOString());
+    }
+
+    const { data: messages, error } = await query;
 
     if (error) throw error;
 
